@@ -1,0 +1,89 @@
+name: acceptance
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  bdd:
+    runs-on: ubuntu-latest
+
+    # Drift runs crawls as BullMQ jobs on Redis, so the suite stands up a real
+    # Redis alongside — closer to production than mocking the queue.
+    services:
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Check out drift-tests
+        uses: actions/checkout@v4
+
+      # The app under test. Private today, so cloning needs a token; when the
+      # repo goes public at portfolio launch this token can be dropped.
+      - name: Check out drift (app under test)
+        uses: actions/checkout@v4
+        with:
+          repository: hipuku/drift
+          token: ${{ secrets.GH_PAT }}
+          path: drift
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Drift
+        working-directory: drift
+        run: npm ci
+
+      - name: Install Chromium for Playwright
+        working-directory: drift
+        run: npx playwright install --with-deps chromium
+
+      - name: Start the Drift backend
+        working-directory: drift
+        env:
+          REDIS_URL: redis://127.0.0.1:6379
+          PORT: "3001"
+        run: |
+          npm run dev:server > ../drift-server.log 2>&1 &
+          echo "waiting for Drift on :3001"
+          for i in $(seq 1 45); do
+            if curl -sf -X POST localhost:3001/discover -H 'content-type: application/json' -d '{}' -o /dev/null; then
+              echo "Drift is up"; exit 0
+            fi
+            # a 400 (missing url) still means the server answered
+            if curl -s -o /dev/null -w '%{http_code}' -X POST localhost:3001/discover -H 'content-type: application/json' -d '{}' | grep -q 400; then
+              echo "Drift is up"; exit 0
+            fi
+            sleep 1
+          done
+          echo "Drift did not start:"; cat ../drift-server.log; exit 1
+
+      - name: Install the suite
+        run: npm ci
+
+      - name: Run the acceptance suite
+        env:
+          DRIFT_URL: http://127.0.0.1:3001
+        run: npm run test:ci
+
+      - name: Drift server log (on failure)
+        if: failure()
+        run: cat drift-server.log || true
+
+      - name: Upload the HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cucumber-report
+          path: reports/cucumber.html
+          if-no-files-found: ignore

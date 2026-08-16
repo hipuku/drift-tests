@@ -1,0 +1,19 @@
+{
+  "name": "drift-tests",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Black-box BDD acceptance suite for Drift's HTTP API.",
+  "license": "MIT",
+  "scripts": {
+    "test": "NODE_OPTIONS=\"--import tsx\" cucumber-js",
+    "test:ci": "NODE_OPTIONS=\"--import tsx\" cucumber-js --format progress --format html:reports/cucumber.html",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@cucumber/cucumber": "^11.2.0",
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
