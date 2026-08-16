@@ -6,6 +6,6 @@ export default {
   import: ["features/support/**/*.ts", "features/steps/**/*.ts"],
   format: ["progress-bar", "summary"],
   formatOptions: { snippetInterface: "async-await" },
-  // A crawl round-trips through Playwright + Redis, so give each scenario room.
-  timeout: 90_000,
+  // The step timeout is set with setDefaultTimeout() in features/support/hooks.ts
+  // (a crawl round-trips through Playwright + Redis) — the config has no such key.
 };

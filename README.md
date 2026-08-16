@@ -22,6 +22,7 @@ validate a real-time platform before release, here applied to my own product.
 | `lifecycle.feature` | `queued → completed` for a reachable site; an unreachable target ends `failed` with a reason and its audit is a `409` — never a `200` all-zeros audit. |
 | `audit.feature` | The audit reports its summary, colour families and contrast findings; it surfaces the fixture's seeded inconsistencies; **no token is attributed to more pages than were crawled**. |
 | `webhooks.feature` | A loopback / private / non-HTTP `callbackUrl` is refused with `422` at enqueue time (SSRF guard). |
+| `webhook-delivery.feature` | A finished crawl is POSTed to the callback URL end to end — `crawl.completed` with the audit, plus the `x-drift-event` and HMAC `x-drift-signature` headers — using an allowlisted loopback receiver. |
 
 Every assertion was verified by hand against a running Drift before it was
 written, so the expected behaviour is known, not guessed.
@@ -41,7 +42,10 @@ Drift must be running first (it owns Redis, the queue and Playwright):
 ```bash
 # in the drift checkout
 npm install
-npm run dev:server          # backend on :3001 — needs Redis reachable
+# the two DRIFT_WEBHOOK_* vars are only needed for webhook-delivery.feature:
+# they let the SSRF guard accept, and sign, delivery to the loopback receiver.
+DRIFT_WEBHOOK_ALLOWED_HOSTS=127.0.0.1 DRIFT_WEBHOOK_SECRET=drift-tests-secret \
+  npm run dev:server        # backend on :3001 — needs Redis reachable
 ```
 
 Then, here:
@@ -57,18 +61,14 @@ Point at a different instance with `DRIFT_URL` (see [`.env.example`](.env.exampl
 
 [`.github/workflows/ci.yml`](.github/workflows/ci.yml) stands the whole thing up
 on each push: a Redis service container, a Drift checkout with Playwright
-Chromium, the backend started in the background, then the suite. Because Drift is
-currently a private repo, cloning it needs a **`GH_PAT`** secret (classic token,
-`repo` scope) on this repository; drop it once Drift is public.
+Chromium, the backend started in the background (with the `DRIFT_WEBHOOK_*` vars
+set), then the suite. Drift is public, so the checkout uses the automatic
+`GITHUB_TOKEN`; no secret is required.
 
 ## What's intentionally not here
 
-Actual webhook **delivery** (HMAC signing, retries, the `crawl.completed`
-payload) is covered by Drift's own unit tests, not here — Drift's SSRF guard
-refuses the loopback address a hermetic in-CI receiver would have to listen on,
-so delivery can't be exercised black-box without a public endpoint. The
-diagnosis **export** (`health`/`findings`/`verdicts`/`rules`) is assembled in
-Drift's client, not exposed by the API, so it isn't a black-box target either;
+The diagnosis **export** (`health`/`findings`/`verdicts`/`rules`) is assembled in
+Drift's client, not exposed by the API, so it isn't a black-box target;
 this suite pins the `/audit` summary and contrast findings the export is built
 from. See [DESIGN.md](DESIGN.md) for the reasoning.
 

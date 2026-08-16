@@ -54,6 +54,10 @@ jobs:
         env:
           REDIS_URL: redis://127.0.0.1:6379
           PORT: "3001"
+          # Permit and sign delivery to the loopback webhook receiver the suite
+          # stands up (the SSRF guard refuses loopback by default).
+          DRIFT_WEBHOOK_ALLOWED_HOSTS: "127.0.0.1"
+          DRIFT_WEBHOOK_SECRET: "drift-tests-secret"
         run: |
           npm run dev:server > ../drift-server.log 2>&1 &
           echo "waiting for Drift on :3001"

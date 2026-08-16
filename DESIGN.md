@@ -52,15 +52,21 @@ token is never attributed to more pages than were crawled.** It is asserted over
 the contrast findings' `pages[]` against `summary.pages`. This is the kind of
 cross-page bookkeeping bug that hides until aggregation runs at scale.
 
-## Webhooks: guard rails, not delivery
+## Webhooks: guard rails and delivery
 
-The webhook scenarios assert the **enqueue-time** guard rails only — loopback,
-private and non-HTTP `callbackUrl`s refused with `422` while the caller is still
-on the line. Actual delivery (HMAC signing, retries, the payload shape) is left
-to Drift's own unit tests. The reason is concrete: Drift's SSRF guard refuses
-the loopback address a hermetic in-CI receiver would have to bind, so delivery
-can't be exercised black-box without a public endpoint — and standing one up
-would trade determinism for coverage that already exists.
+Two feature files. `webhooks.feature` asserts the **enqueue-time** guard rails —
+loopback, private and non-HTTP `callbackUrl`s refused with `422` while the caller
+is still on the line. `webhook-delivery.feature` then exercises a **successful
+delivery** end to end: the suite stands up a loopback receiver, enqueues a crawl
+with that receiver as the callback, and asserts the finished audit arrives as a
+signed `crawl.completed`.
+
+Delivery to a loopback receiver only works because Drift's SSRF guard now takes
+an opt-in `DRIFT_WEBHOOK_ALLOWED_HOSTS` allowlist. The backend under test is
+started with `127.0.0.1` allowlisted and a `DRIFT_WEBHOOK_SECRET` set. That is
+the same mechanism a real deployment uses to allow a trusted internal callback
+host, so the test rides a genuine feature rather than a test-only backdoor. It
+keeps the suite hermetic: no public endpoint, still deterministic.
 
 ## The export is client-side, so it isn't a black-box target
 

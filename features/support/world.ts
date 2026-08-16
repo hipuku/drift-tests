@@ -34,6 +34,8 @@ export class DriftWorld extends World {
   jobId?: string;
   terminal?: JobResult;
   audit?: any;
+  receiver?: import("./webhookReceiver.js").WebhookReceiver;
+  deliveredWebhook?: import("./webhookReceiver.js").ReceivedWebhook;
 
   constructor(options: IWorldOptions) {
     super(options);

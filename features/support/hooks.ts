@@ -8,9 +8,14 @@
  * dev:server` locally) — the suite is black-box and never reaches inside it.
  */
 
-import { AfterAll, BeforeAll } from "@cucumber/cucumber";
+import { AfterAll, BeforeAll, setDefaultTimeout } from "@cucumber/cucumber";
 import { startFixtureSite } from "./fixtureSite.js";
 import { DRIFT_URL, setFixture, fixture } from "./world.js";
+
+// A step may drive a full Playwright crawl through the queue (and then wait for
+// a webhook), so the default 5s step timeout is far too short. The `timeout`
+// key in cucumber.mjs is not a real option — this is the way to set it.
+setDefaultTimeout(90_000);
 
 BeforeAll({ timeout: 60_000 }, async function () {
   await waitForDrift();
