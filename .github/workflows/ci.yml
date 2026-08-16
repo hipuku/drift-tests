@@ -26,13 +26,14 @@ jobs:
       - name: Check out drift-tests
         uses: actions/checkout@v4
 
-      # The app under test. Private today, so cloning needs a token; when the
-      # repo goes public at portfolio launch this token can be dropped.
+      # The app under test. While hipuku/drift is private, cloning needs a read
+      # token (set the GH_PAT secret). Once it's public, delete the secret and
+      # this falls back to the automatic GITHUB_TOKEN — no edit required.
       - name: Check out drift (app under test)
         uses: actions/checkout@v4
         with:
           repository: hipuku/drift
-          token: ${{ secrets.GH_PAT }}
+          token: ${{ secrets.GH_PAT || github.token }}
           path: drift
 
       - name: Set up Node
