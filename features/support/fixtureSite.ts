@@ -13,10 +13,10 @@ import type { AddressInfo } from "node:net";
 
 // Shared, on-purpose-messy stylesheet. The numbers are chosen to trip specific
 // audit signals so scenarios can assert on them:
-//   - #3366cc vs #3467cc  → perceptually near-duplicate colours (ΔE < ~2)
+//   - #3366cc vs #3467cc  → perceptually near-duplicate colours (ΔE ≈ 0.3)
 //   - padding: 13px / 7px → off a 4px grid
-//   - font-size: 15/19/23 → off the closest modular scale
-//   - #999 on #fff        → ~2.85:1, fails WCAG AA for normal text
+//   - font-size: 15/23/31 → off the closest modular scale
+//   - #999 on #fff        → 2.85:1, fails WCAG AA for normal text
 const STYLE = `
   :root { color-scheme: light; }
   body { margin: 0; font-family: Georgia, serif; color: #222; background: #ffffff; }

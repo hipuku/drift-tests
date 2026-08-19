@@ -22,10 +22,10 @@ ephemeral `127.0.0.1` port, started once in `BeforeAll`.
 The fixture is **deliberately inconsistent**, with values chosen to trip
 specific audit signals so scenarios can assert exact outcomes:
 
-- `#3366cc` beside `#3467cc` → a perceptually near-duplicate colour (ΔE < ~2).
+- `#3366cc` beside `#3467cc` → a perceptually near-duplicate colour (ΔE ≈ 0.3).
 - `padding: 13px` / `7px` → off a 4px grid.
-- `font-size: 15/19/23px` → off the closest modular scale.
-- `#999` text on `#fff` → ~2.85:1, fails WCAG AA for normal text.
+- `font-size: 15/23/31px` → off the closest modular scale.
+- `#999` text on `#fff` → 2.85:1, fails WCAG AA for normal text.
 
 Same input, same audit, every run.
 
