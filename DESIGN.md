@@ -8,7 +8,7 @@ them — not a tutorial.
 The suite talks to Drift only through its HTTP API, exactly as any other client
 would. It imports nothing from Drift and knows nothing about its internals. That
 is the point: it proves the *running service* honours its contract, which unit
-tests (Drift has ~100) cannot. It is the same outside-in acceptance shape used
+tests cannot. It is the same outside-in acceptance shape used
 to validate a live platform before release, on code I own.
 
 ## Hermetic fixture instead of the live web

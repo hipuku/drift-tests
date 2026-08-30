@@ -3,8 +3,8 @@
 Black-box **BDD acceptance tests** for [Drift](https://github.com/hipuku/drift)'s
 HTTP API. Cucumber feature files describe the API's promised behaviour in plain
 language; step definitions drive the real endpoints over HTTP and assert on the
-responses. These are not unit tests — Drift already has ~100 of those. This is
-the outside-in view: does the running service honour its contract?
+responses. These are not unit tests — Drift carries its own, in its own repo.
+This is the outside-in view: does the running service honour its contract?
 
 ## Why it exists
 
