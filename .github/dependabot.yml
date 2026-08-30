@@ -1,6 +1,7 @@
 # The suite has no runtime dependencies: Cucumber, the TypeScript loader and the
-# linters are the whole tree, so one group covers it and a bump here can break
-# nothing but this repo.
+# linters are the whole tree, so a bump here can break nothing but this repo.
+# Two groups, because the runner and the linters fail for different reasons and
+# a runner major grouped with them takes every lint patch down with it.
 version: 2
 updates:
   - package-ecosystem: npm
@@ -10,12 +11,22 @@ updates:
       day: monday
     open-pull-requests-limit: 5
     groups:
+      # Cucumber and its loader are the runner. Grouped with the linters, one
+      # runner major holds every lint patch behind it.
+      runner:
+        patterns: ['@cucumber/*', 'tsx']
       tooling:
         patterns: ['*']
     commit-message:
       prefix: 'deps'
     ignore:
       - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
+      # TypeScript 7 is the native rewrite, deferred across every repo here so
+      # they move together. Recorded rather than closed: a closed pull request
+      # comes back on the next run and says nothing about why it was refused,
+      # and while it kept coming back it held @cucumber/cucumber 13 behind it.
+      - dependency-name: 'typescript'
         update-types: ['version-update:semver-major']
 
   - package-ecosystem: github-actions
