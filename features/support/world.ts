@@ -23,10 +23,25 @@ export interface JobResult {
   error?: string;
 }
 
-// Shared across every scenario — the fixture only needs starting once.
-export let fixture: FixtureSite;
+/**
+ * Shared across every scenario — the fixture only needs starting once, in
+ * BeforeAll.
+ *
+ * Deliberately not exported. Steps reach it through `this.fixture`, which throws
+ * a useful message when it is unset; a step that imported the binding directly
+ * would instead see `undefined` and fail somewhere further along, describing a
+ * symptom rather than the cause. `closeFixture` exists so AfterAll can tear it
+ * down without the binding leaking for that one caller.
+ */
+let fixture: FixtureSite | undefined;
+
 export function setFixture(f: FixtureSite): void {
   fixture = f;
+}
+
+export async function closeFixture(): Promise<void> {
+  await fixture?.close();
+  fixture = undefined;
 }
 
 export class DriftWorld extends World {

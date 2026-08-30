@@ -10,7 +10,7 @@
 
 import { AfterAll, BeforeAll, setDefaultTimeout } from "@cucumber/cucumber";
 import { startFixtureSite } from "./fixtureSite.js";
-import { DRIFT_URL, setFixture, fixture } from "./world.js";
+import { DRIFT_URL, closeFixture, setFixture } from "./world.js";
 
 // A step may drive a full Playwright crawl through the queue (and then wait for
 // a webhook), so the default 5s step timeout is far too short. The `timeout`
@@ -23,7 +23,7 @@ BeforeAll({ timeout: 60_000 }, async function () {
 });
 
 AfterAll(async function () {
-  await fixture?.close();
+  await closeFixture();
 });
 
 /** Poll a cheap endpoint until Drift answers, so scenarios don't race startup. */

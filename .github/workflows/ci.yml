@@ -36,10 +36,13 @@ jobs:
           token: ${{ secrets.GH_PAT || github.token }}
           path: drift
 
+      # Match the app under test. drift declares `^20.19.0 || >=22.12.0` and
+      # pins 22 in .nvmrc; booting it here on a different major would mean the
+      # contract is proved against a runtime nobody ships.
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version-file: drift/.nvmrc
 
       - name: Install Drift
         working-directory: drift
@@ -62,11 +65,12 @@ jobs:
           npm run dev:server > ../drift-server.log 2>&1 &
           echo "waiting for Drift on :3001"
           for i in $(seq 1 45); do
-            if curl -sf -X POST localhost:3001/discover -H 'content-type: application/json' -d '{}' -o /dev/null; then
-              echo "Drift is up"; exit 0
-            fi
-            # a 400 (missing url) still means the server answered
-            if curl -s -o /dev/null -w '%{http_code}' -X POST localhost:3001/discover -H 'content-type: application/json' -d '{}' | grep -q 400; then
+            # A missing `url` is a documented, deterministic 400 — the cheapest
+            # proof the API is answering, with no Redis, Playwright or network
+            # involved. `discover.feature` asserts that status, so this probe is
+            # a consequence of a tested rule rather than a private assumption.
+            if [ "$(curl -s -o /dev/null -w '%{http_code}' -X POST localhost:3001/discover \
+                    -H 'content-type: application/json' -d '{}')" = "400" ]; then
               echo "Drift is up"; exit 0
             fi
             sleep 1
@@ -75,6 +79,9 @@ jobs:
 
       - name: Install the suite
         run: npm ci
+
+      - name: Typecheck the suite
+        run: npm run typecheck
 
       - name: Run the acceptance suite
         env:
