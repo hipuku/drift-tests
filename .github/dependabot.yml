@@ -1,0 +1,24 @@
+# The suite has no runtime dependencies: Cucumber, the TypeScript loader and the
+# linters are the whole tree, so one group covers it and a bump here can break
+# nothing but this repo.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      tooling:
+        patterns: ['*']
+    commit-message:
+      prefix: 'deps'
+    ignore:
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
