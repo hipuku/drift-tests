@@ -12,6 +12,14 @@ import type { FixtureSite } from "./fixtureSite.js";
 /** Base URL of the Drift API under test. CI sets this; defaults to local dev. */
 export const DRIFT_URL = process.env.DRIFT_URL ?? "http://127.0.0.1:3001";
 
+/**
+ * Which Drift the suite is running against. CI derives it with `git describe`
+ * over the checkout it made and passes it in. Nothing on the API reports a
+ * version, so this is the only provenance available, and a run that cannot
+ * state it says so rather than implying the tag it happened to expect.
+ */
+export const DRIFT_VERSION = process.env.DRIFT_VERSION ?? "unrecorded";
+
 export interface ApiResponse {
   status: number;
   body: any;

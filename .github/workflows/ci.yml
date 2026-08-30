@@ -4,13 +4,18 @@ on:
   push:
   pull_request:
   workflow_dispatch:
+    inputs:
+      drift_ref:
+        description: "Drift tag, branch or SHA to test against. Empty means its default branch."
+        required: false
+        default: ""
 
 jobs:
   bdd:
     runs-on: ubuntu-latest
 
     # Drift runs crawls as BullMQ jobs on Redis, so the suite stands up a real
-    # Redis alongside — closer to production than mocking the queue.
+    # Redis alongside, which is closer to production than mocking the queue.
     services:
       redis:
         image: redis:7
@@ -26,15 +31,29 @@ jobs:
       - name: Check out drift-tests
         uses: actions/checkout@v4
 
-      # The app under test. While hipuku/drift is private, cloning needs a read
-      # token (set the GH_PAT secret). Once it's public, delete the secret and
-      # this falls back to the automatic GITHUB_TOKEN — no edit required.
+      # The app under test. hipuku/drift is public, so the automatic GITHUB_TOKEN
+      # is enough; GH_PAT is honoured if it is set, which keeps the workflow
+      # working unchanged if the repo is ever made private.
+      #
+      # fetch-depth: 0 brings the tags, without which `git describe` below can
+      # only report a SHA.
       - name: Check out drift (app under test)
         uses: actions/checkout@v4
         with:
           repository: hipuku/drift
+          ref: ${{ inputs.drift_ref }}
           token: ${{ secrets.GH_PAT || github.token }}
+          fetch-depth: 0
           path: drift
+
+      # A green run has to say what it proved the contract against. Nothing on
+      # Drift's API reports a version, so the checkout itself is the provenance:
+      # the nearest tag, or a SHA when the run is not on one.
+      - name: Record the Drift version under test
+        run: |
+          version=$(git -C drift describe --tags --always)
+          echo "DRIFT_VERSION=$version" >> "$GITHUB_ENV"
+          echo "Drift under test: \`$version\`" >> "$GITHUB_STEP_SUMMARY"
 
       # Match the app under test. drift declares `^20.19.0 || >=22.12.0` and
       # pins 22 in .nvmrc; booting it here on a different major would mean the
@@ -65,7 +84,7 @@ jobs:
           npm run dev:server > ../drift-server.log 2>&1 &
           echo "waiting for Drift on :3001"
           for i in $(seq 1 45); do
-            # A missing `url` is a documented, deterministic 400 — the cheapest
+            # A missing `url` is a documented, deterministic 400: the cheapest
             # proof the API is answering, with no Redis, Playwright or network
             # involved. `discover.feature` asserts that status, so this probe is
             # a consequence of a tested rule rather than a private assumption.
@@ -89,6 +108,7 @@ jobs:
       - name: Run the acceptance suite
         env:
           DRIFT_URL: http://127.0.0.1:3001
+          DRIFT_VERSION: ${{ env.DRIFT_VERSION }}
         run: npm run test:ci
 
       - name: Drift server log (on failure)
@@ -99,6 +119,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: cucumber-report
+          name: cucumber-report-${{ env.DRIFT_VERSION }}
           path: reports/cucumber.html
           if-no-files-found: ignore

@@ -84,8 +84,9 @@ the design notes and not in a diff.
 
 Importing nothing from Drift means importing Drift's **types** is also off the
 table, so response bodies arrive as `any` and are narrowed by hand at each
-assertion. Five remain, in `world.ts`, `webhookReceiver.ts` and
-`audit.steps.ts`. That is the cost of the boundary. A suite
+assertion. Six warnings remain, over five declarations in `world.ts`,
+`webhookReceiver.ts` and `audit.steps.ts` plus one return type. That is the cost
+of the boundary. A suite
 that imported `SiteAudit` would typecheck against the implementation it is
 supposed to be testing from the outside, and would go green against a contract
 that had silently changed shape.
@@ -93,8 +94,8 @@ that had silently changed shape.
 The honest middle path exists: Drift publishes `openapi.yaml`, so the response
 types can be **generated from the published contract** rather than imported from
 the source. That keeps the suite black-box against the implementation while typed
-against the promise. It waits on Drift tagging releases, so the generated types
-have a version to pin to. See `AUDIT-drift.md` D1.
+against the promise. It waited on Drift tagging releases, so the generated types
+would have a version to pin to; v0.1.0 is that tag.
 
 Until then `@typescript-eslint/no-explicit-any` is set to warn. The count stays
 visible and CI does not fail on a decision that has a date on it. Make it an
@@ -106,15 +107,32 @@ Steps use Node's built-in `fetch` and `node:assert/strict`. The suite's only
 runtime dependencies are Cucumber and the TypeScript loader. Fewer moving parts,
 nothing to keep in sync with a Drift version.
 
+## Which Drift a run proved the contract against
+
+Drift shipped on `0.0.0` with no tags until v0.1.0, so a green report here said
+the contract held without saying held for what, and a deliberate breaking change
+in Drift would have arrived as a failing test with no way to tell it from a
+regression.
+
+The provenance comes from the checkout rather than from the API, because nothing
+Drift serves reports a version. CI runs `git describe --tags` over the Drift it
+cloned, which yields the released tag, or a SHA when the run is not on one, and
+passes it in as `DRIFT_VERSION`. The suite prints it at startup and attaches it
+to the first scenario, so it is in the HTML report a reader is handed; the job
+summary and the artefact name carry it too. A run with `DRIFT_VERSION` unset
+reports `unrecorded` and does not guess.
+
+Testing a specific release is `workflow_dispatch` with `drift_ref`. The default
+stays Drift's main branch: pinning every run to the last tag would mean the
+suite stopped seeing changes until someone remembered to move the pin, which is
+the failure mode the pin was meant to prevent.
+
 ## Known trade-offs / next
 
-**Nothing records which Drift a green run proved the contract against.** The suite
-checks out `hipuku/drift@main`, so a report says the contract held, without
-saying held *for what*. A green run is evidence only if it names its subject. The
-fix waits on Drift tagging releases: print the tag or commit in the run and carry
-it into the HTML report.
-
-**Five `any`, waiting on generated types.** See above.
+**Six `any` warnings, waiting on generated types.** See above. Drift v0.1.0
+removes what blocked this: `openapi.yaml` now carries a version the generated
+types can be pinned to, so the remaining work is adding the generator and a check
+that fails when the committed types stop matching the spec.
 
 **The export cannot be tested at all.** The most valuable thing Drift produces is
 the diagnosis, and it is assembled in the client, so the suite pins the raw

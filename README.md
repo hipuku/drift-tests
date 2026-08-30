@@ -65,8 +65,16 @@ set), then lint, typecheck and the suite. Node comes from Drift's own `.nvmrc`,
 so the contract is proved against the runtime Drift declares rather than one
 pinned here and left to drift apart.
 
-The Drift checkout uses a `GH_PAT` secret if one is set and falls back to the
-automatic `GITHUB_TOKEN` otherwise, so it works whether or not Drift is public.
+Drift is public, so the automatic `GITHUB_TOKEN` clones it. A `GH_PAT` secret is
+used if one is set, which keeps the workflow working unchanged if that ever
+changes.
+
+Each run records the Drift it tested. The checkout is described with
+`git describe --tags`, which gives the released tag or a SHA when the run is not
+on one, and that string reaches three places: the job summary, the name of the
+uploaded report artefact, and the first scenario in the report itself. A run
+against a specific release is a `workflow_dispatch` with `drift_ref` set to the
+tag.
 
 ## Scripts
 
