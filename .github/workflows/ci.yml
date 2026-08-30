@@ -59,7 +59,7 @@ jobs:
       # pins 22 in .nvmrc; booting it here on a different major would mean the
       # contract is proved against a runtime nobody ships.
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version-file: drift/.nvmrc
 
