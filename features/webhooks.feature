@@ -5,7 +5,7 @@ Feature: Webhook callbacks
 
   # The test backend allowlists 127.0.0.1 (for webhook-delivery.feature), so this
   # uses a private-range address to prove the guard still refuses everything the
-  # operator did NOT explicitly allow. Allowlisting one host is not a blanket open.
+  # operator did NOT explicitly allow.
   Scenario: A non-allowlisted private callback URL is refused
     When I enqueue a crawl of the fixture site with callback "http://10.0.0.1/hook"
     Then the response status is 422
