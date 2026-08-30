@@ -129,10 +129,15 @@ the failure mode the pin was meant to prevent.
 
 ## Known trade-offs / next
 
-**Six `any` warnings, waiting on generated types.** See above. Drift v0.1.0
-removes what blocked this: `openapi.yaml` now carries a version the generated
-types can be pinned to, so the remaining work is adding the generator and a check
-that fails when the committed types stop matching the spec.
+**Six `any` warnings, and the types they are waiting on now exist.**
+`features/support/contract.d.ts` is generated from Drift's `openapi.yaml` by
+`npm run generate`, and CI regenerates it against the Drift it clones and fails
+if the committed file has moved. The remaining work is adopting the generated
+types at the six sites and making `@typescript-eslint/no-explicit-any` an error.
+
+The check earned itself before it was written. The types were committed without
+a generator, so the spec moved and they did not: two response descriptions were
+still the pre-sweep text a month after Drift changed them, and nothing said so.
 
 **The export cannot be tested at all.** The most valuable thing Drift produces is
 the diagnosis, and it is assembled in the client, so the suite pins the raw

@@ -99,6 +99,19 @@ jobs:
       - name: Install the suite
         run: npm ci
 
+      # The committed types are generated from Drift's openapi.yaml, and nothing
+      # regenerated them, so the spec moved and they did not: two response
+      # descriptions were still the pre-sweep text a month after Drift changed
+      # them. Regenerating against the Drift this run cloned makes the drift
+      # visible here instead of in a reader's editor.
+      - name: Check the generated types against the spec
+        env:
+          DRIFT_SPEC: drift/openapi.yaml
+        run: |
+          npm run generate
+          git diff --exit-code -- features/support/contract.d.ts \
+            || { echo "features/support/contract.d.ts is out of date; run npm run generate"; exit 1; }
+
       - name: Lint the suite
         run: npm run lint
 

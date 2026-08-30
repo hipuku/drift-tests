@@ -85,6 +85,7 @@ tag.
 | `npm run lint` | ESLint, mirroring Drift's config |
 | `npm run lint:fix` | ESLint with `--fix` |
 | `npm run typecheck` | `tsc --noEmit` |
+| `npm run generate` | Regenerate `features/support/contract.d.ts` from Drift's `openapi.yaml`. Reads `DRIFT_SPEC`, defaulting to a sibling `../drift` checkout |
 
 ## What's intentionally not here
 

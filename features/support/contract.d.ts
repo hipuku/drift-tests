@@ -159,7 +159,7 @@ export interface components {
             rootUrl: string;
             host: string;
             /**
-             * @description How pages were found — a sitemap, or homepage anchors (fallback).
+             * @description How pages were found, from a sitemap or homepage anchors (fallback).
              * @enum {string}
              */
             via?: "sitemap" | "links";
@@ -328,7 +328,7 @@ export interface operations {
                     "application/json": components["schemas"]["Error"];
                 };
             };
-            /** @description Invalid, unreachable, or non-http(s) URL — with a human-readable message. */
+            /** @description Invalid, unreachable, or non-http(s) URL, with a human-readable message. */
             422: {
                 headers: {
                     [name: string]: unknown;
