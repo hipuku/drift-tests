@@ -29,7 +29,7 @@ jobs:
 
     steps:
       - name: Check out drift-tests
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # The app under test. hipuku/drift is public, so the automatic GITHUB_TOKEN
       # is enough; GH_PAT is honoured if it is set, which keeps the workflow
@@ -38,7 +38,7 @@ jobs:
       # fetch-depth: 0 brings the tags, without which `git describe` below can
       # only report a SHA.
       - name: Check out drift (app under test)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: hipuku/drift
           ref: ${{ inputs.drift_ref }}
