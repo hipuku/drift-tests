@@ -8,12 +8,18 @@
   "scripts": {
     "test": "NODE_OPTIONS=\"--import tsx\" cucumber-js",
     "test:ci": "NODE_OPTIONS=\"--import tsx\" cucumber-js --format progress --format html:reports/cucumber.html",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "devDependencies": {
     "@cucumber/cucumber": "^11.2.0",
+    "@eslint/js": "^10.0.1",
     "@types/node": "^22.10.0",
+    "eslint": "^10.9.1",
+    "globals": "^17.11.0",
     "tsx": "^4.19.2",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.68.0"
   }
 }

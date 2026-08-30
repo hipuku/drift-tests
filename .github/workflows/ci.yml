@@ -80,6 +80,9 @@ jobs:
       - name: Install the suite
         run: npm ci
 
+      - name: Lint the suite
+        run: npm run lint
+
       - name: Typecheck the suite
         run: npm run typecheck
 
