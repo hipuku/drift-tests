@@ -1,7 +1,7 @@
 /**
  * Webhook steps.
  *
- * These assert the enqueue-time guard rails only — SSRF and validation
+ * These assert the enqueue-time guard rails only: SSRF and validation
  * refusals, where the caller is still on the line to be told 422. Actual
  * delivery of `crawl.completed` / `crawl.failed` (HMAC signing, retries) is
  * covered by Drift's own unit tests, because the SSRF guard refuses the

@@ -5,7 +5,7 @@
  *  - AfterAll: tear the fixture down.
  *
  * Drift itself is started by the caller (the CI workflow, or `npm run
- * dev:server` locally) — the suite is black-box and never reaches inside it.
+ * dev:server` locally). The suite is black-box and never reaches inside it.
  */
 
 import { AfterAll, BeforeAll, setDefaultTimeout } from "@cucumber/cucumber";
@@ -14,7 +14,7 @@ import { DRIFT_URL, closeFixture, setFixture } from "./world.js";
 
 // A step may drive a full Playwright crawl through the queue (and then wait for
 // a webhook), so the default 5s step timeout is far too short. The `timeout`
-// key in cucumber.mjs is not a real option — this is the way to set it.
+// key in cucumber.mjs is not a real option; this is the way to set it.
 setDefaultTimeout(90_000);
 
 BeforeAll({ timeout: 60_000 }, async function () {
@@ -32,7 +32,7 @@ async function waitForDrift(timeoutMs = 45_000): Promise<void> {
   let lastErr: unknown;
   while (Date.now() < deadline) {
     try {
-      // A missing `url` is a fast, deterministic 400 — proof the API is up
+      // A missing `url` is a fast, deterministic 400: proof the API is up
       // without touching Redis, Playwright or the network.
       const res = await fetch(`${DRIFT_URL}/discover`, {
         method: "POST",

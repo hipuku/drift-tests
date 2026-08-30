@@ -7,5 +7,5 @@ export default {
   format: ["progress-bar", "summary"],
   formatOptions: { snippetInterface: "async-await" },
   // The step timeout is set with setDefaultTimeout() in features/support/hooks.ts
-  // (a crawl round-trips through Playwright + Redis) — the config has no such key.
+  // (a crawl round-trips through Playwright + Redis). The config has no such key.
 };

@@ -51,20 +51,20 @@ function page(title: string, body: string): string {
 
 const PAGES: Record<string, string> = {
   "/": page(
-    "Fixture — Home",
+    "Fixture: Home",
     `<h1>Acme Fixture</h1>
      <p>A small site with intentionally inconsistent design tokens.</p>
      <p class="muted">This low-contrast line exists to fail a WCAG AA check.</p>
      <div class="card"><h2>Featured</h2><p>Card copy.</p><a class="cta" href="/pricing">See pricing</a></div>`,
   ),
   "/about": page(
-    "Fixture — About",
+    "Fixture: About",
     `<h1>About</h1>
      <p>We reuse almost-identical blues and spacing that never lands on a grid.</p>
      <div class="card"><h2>Team</h2><p class="muted">Another muted, low-contrast paragraph.</p></div>`,
   ),
   "/pricing": page(
-    "Fixture — Pricing",
+    "Fixture: Pricing",
     `<h1>Pricing</h1>
      <h2>Plans</h2>
      <div class="card"><p>Starter</p><a class="cta" href="/">Back home</a></div>

@@ -3,14 +3,13 @@
 Black-box **BDD acceptance tests** for [Drift](https://github.com/hipuku/drift)'s
 HTTP API. Cucumber feature files describe the API's promised behaviour in plain
 language; step definitions drive the real endpoints over HTTP and assert on the
-responses. These are not unit tests — Drift carries its own, in its own repo.
-This is the outside-in view: does the running service honour its contract?
+responses. Drift carries its own unit tests, in its own repo. This is the outside-in view: does the running service honour its contract?
 
 ## Why it exists
 
 It makes a testing discipline **demonstrable on code I own**. The behaviour it
-locks down — job lifecycle, edge validation, an aggregation invariant, SSRF
-guard rails on webhooks — is exactly the acceptance-testing shape used to
+locks down (job lifecycle, edge validation, an aggregation invariant, SSRF guard
+rails on webhooks) is the acceptance-testing shape used to
 validate a real-time platform before release, here applied to my own product.
 
 ## What it covers
@@ -19,10 +18,10 @@ validate a real-time platform before release, here applied to my own product.
 |---|---|
 | `discover.feature` | Sitemap-less sites fall back to homepage links; missing / non-HTTP / unresolvable URLs return a friendly `400`/`422`. |
 | `crawl.feature` | A good URL returns `202 { jobId }`; a malformed one is rejected at the edge with no job queued. |
-| `lifecycle.feature` | `queued → completed` for a reachable site; an unreachable target ends `failed` with a reason and its audit is a `409` — never a `200` all-zeros audit. |
+| `lifecycle.feature` | `queued → completed` for a reachable site; an unreachable target ends `failed` with a reason and its audit is a `409`, never a `200` all-zeros audit. |
 | `audit.feature` | The audit reports its summary, colour families and contrast findings; it surfaces the fixture's seeded inconsistencies; **no token is attributed to more pages than were crawled**. |
 | `webhooks.feature` | A loopback / private / non-HTTP `callbackUrl` is refused with `422` at enqueue time (SSRF guard). |
-| `webhook-delivery.feature` | A finished crawl is POSTed to the callback URL end to end — `crawl.completed` with the audit, plus the `x-drift-event` and HMAC `x-drift-signature` headers — using an allowlisted loopback receiver. |
+| `webhook-delivery.feature` | A finished crawl is POSTed to the callback URL end to end: `crawl.completed` with the audit, plus the `x-drift-event` and HMAC `x-drift-signature` headers, using an allowlisted loopback receiver. |
 
 Every assertion was verified by hand against a running Drift before it was
 written, so the expected behaviour is known, not guessed.
@@ -31,8 +30,8 @@ written, so the expected behaviour is known, not guessed.
 
 The suite never touches the public internet. It serves a small,
 deliberately-inconsistent [fixture site](features/support/fixtureSite.ts) on
-`127.0.0.1` — three same-origin pages with near-duplicate blues, off-grid
-spacing, off-scale type and a failing-contrast pair — and points Drift at that.
+`127.0.0.1`: three same-origin pages with near-duplicate blues, off-grid
+spacing, off-scale type and a failing-contrast pair. Drift is pointed at that.
 Same input, same audit, every run.
 
 ## Running it locally
@@ -45,7 +44,7 @@ npm install
 # the two DRIFT_WEBHOOK_* vars are only needed for webhook-delivery.feature:
 # they let the SSRF guard accept, and sign, delivery to the loopback receiver.
 DRIFT_WEBHOOK_ALLOWED_HOSTS=127.0.0.1 DRIFT_WEBHOOK_SECRET=drift-tests-secret \
-  npm run dev:server        # backend on :3001 — needs Redis reachable
+  npm run dev:server        # backend on :3001, needs Redis reachable
 ```
 
 Then, here:

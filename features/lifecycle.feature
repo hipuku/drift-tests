@@ -1,6 +1,6 @@
 Feature: Crawl job lifecycle
   A crawl runs as a queued job and ends in a terminal state. The audit is only
-  available once the crawl has finished — never a 200 all-zeros audit for a run
+  available once the crawl has finished, never a 200 all-zeros audit for a run
   that produced nothing.
 
   Scenario: A reachable site crawls to completion

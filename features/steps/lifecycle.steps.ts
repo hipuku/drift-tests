@@ -6,14 +6,14 @@ import { DriftWorld } from "../support/world.js";
 
 When("I enqueue a crawl of the unreachable target", async function (this: DriftWorld) {
   // Syntactically valid (has a dot, http scheme) so it passes edge validation
-  // and is queued — but nothing listens on port 9, so the crawl fails. That is
+  // and is queued, but nothing listens on port 9, so the crawl fails. That is
   // the "zero pages" path: a failed job, not a 200 all-zeros audit.
   const res = await this.post("/crawl", { url: "http://127.0.0.1:9/" });
   this.jobId = res.body?.jobId;
 });
 
 When("I wait for the crawl to finish", async function (this: DriftWorld) {
-  assert.ok(this.jobId, "no jobId — enqueue a crawl first");
+  assert.ok(this.jobId, "no jobId; enqueue a crawl first");
   this.terminal = await this.runCrawlToCompletion(this.jobId);
 });
 

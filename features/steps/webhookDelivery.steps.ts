@@ -27,7 +27,7 @@ When(
 );
 
 When("I wait for the webhook to arrive", async function (this: DriftWorld) {
-  assert.ok(this.receiver, "no receiver — enqueue with a delivery callback first");
+  assert.ok(this.receiver, "no receiver; enqueue with a delivery callback first");
   this.deliveredWebhook = await this.receiver.waitForOne();
 });
 
@@ -49,7 +49,7 @@ Then("the webhook is signed", function (this: DriftWorld) {
   const sig = this.deliveredWebhook?.headers["x-drift-signature"];
   assert.ok(
     typeof sig === "string" && sig.startsWith("sha256="),
-    `expected an x-drift-signature (sha256=…) — is DRIFT_WEBHOOK_SECRET set on the backend? got ${sig}`,
+    `expected an x-drift-signature (sha256=...). Is DRIFT_WEBHOOK_SECRET set on the backend? got ${sig}`,
   );
 });
 

@@ -1,6 +1,6 @@
 Feature: The audit
   A completed crawl yields a deterministic audit of every design token actually
-  shipped — colours, type, spacing — with WCAG contrast findings and a summary.
+  shipped: colours, type and spacing, with WCAG contrast findings and a summary.
   The fixture site seeds known inconsistencies, so the audit's verdicts are
   predictable run to run.
 

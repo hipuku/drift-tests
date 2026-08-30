@@ -18,7 +18,7 @@ Then(
     const body = this.lastResponse?.body;
     const pages: unknown = body?.pages;
     assert.ok(Array.isArray(pages), `expected a pages array, got ${JSON.stringify(body)}`);
-    // Pages may be strings or objects carrying a url — normalise to a URL
+    // Pages may be strings or objects carrying a url; normalise to a URL
     // string. Narrowed here rather than typed as `any`: this shape is small
     // enough to state, unlike the response bodies, which wait on types
     // generated from drift's published openapi.yaml.

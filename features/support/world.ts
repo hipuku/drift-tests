@@ -24,7 +24,7 @@ export interface JobResult {
 }
 
 /**
- * Shared across every scenario — the fixture only needs starting once, in
+ * Shared across every scenario. The fixture only needs starting once, in
  * BeforeAll.
  *
  * Deliberately not exported. Steps reach it through `this.fixture`, which throws
@@ -57,7 +57,7 @@ export class DriftWorld extends World {
   }
 
   get fixture(): FixtureSite {
-    if (!fixture) throw new Error("fixture site not started — check BeforeAll");
+    if (!fixture) throw new Error("fixture site not started; check BeforeAll");
     return fixture;
   }
 
