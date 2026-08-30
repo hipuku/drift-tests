@@ -62,8 +62,22 @@ Point at a different instance with `DRIFT_URL` (see [`.env.example`](.env.exampl
 [`.github/workflows/ci.yml`](.github/workflows/ci.yml) stands the whole thing up
 on each push: a Redis service container, a Drift checkout with Playwright
 Chromium, the backend started in the background (with the `DRIFT_WEBHOOK_*` vars
-set), then the suite. Drift is public, so the checkout uses the automatic
-`GITHUB_TOKEN`; no secret is required.
+set), then lint, typecheck and the suite. Node comes from Drift's own `.nvmrc`,
+so the contract is proved against the runtime Drift declares rather than one
+pinned here and left to drift apart.
+
+The Drift checkout uses a `GH_PAT` secret if one is set and falls back to the
+automatic `GITHUB_TOKEN` otherwise, so it works whether or not Drift is public.
+
+## Scripts
+
+| Command | Does |
+| --- | --- |
+| `npm test` | Every feature against `DRIFT_URL` (default `http://127.0.0.1:3001`) |
+| `npm run test:ci` | The same, with progress output and an HTML report in `reports/` |
+| `npm run lint` | ESLint, mirroring Drift's config |
+| `npm run lint:fix` | ESLint with `--fix` |
+| `npm run typecheck` | `tsc --noEmit` |
 
 ## What's intentionally not here
 
@@ -72,6 +86,10 @@ Drift's client, not exposed by the API, so it isn't a black-box target;
 this suite pins the `/audit` summary and contrast findings the export is built
 from. See [DESIGN.md](DESIGN.md) for the reasoning.
 
-## Licence
+## Stack
 
-MIT.
+Cucumber.js · TypeScript · tsx · Node's built-in `fetch` and `node:assert/strict`
+
+No assertion library and no HTTP client: the only runtime dependencies are
+Cucumber and the TypeScript loader. See [`DESIGN.md`](DESIGN.md) for why, and for
+what the black-box boundary costs.

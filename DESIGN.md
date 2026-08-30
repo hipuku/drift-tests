@@ -77,15 +77,55 @@ The suite therefore pins the raw material the export is built from — the audit
 doesn't serve. If a JSON-export endpoint is added to the backend later, a
 `export.feature` becomes the natural home for that contract.
 
+## What black-box costs, and where it is paid
+
+The decision above has a price and it should be named rather than discovered.
+
+Importing nothing from Drift means importing Drift's **types** is also off the
+table, so response bodies arrive as `any` and are narrowed by hand at each
+assertion. Five remain, in `world.ts`, `webhookReceiver.ts` and
+`audit.steps.ts`. That is the cost of the boundary, not carelessness — a suite
+that imported `SiteAudit` would typecheck against the implementation it is
+supposed to be testing from the outside, and would go green against a contract
+that had silently changed shape.
+
+The honest middle path exists: Drift publishes `openapi.yaml`, so the response
+types can be **generated from the published contract** rather than imported from
+the source. That keeps the suite black-box against the implementation while typed
+against the promise. It waits on Drift tagging releases, so the generated types
+have a version to pin to — see `AUDIT-drift.md` D1.
+
+Until then `@typescript-eslint/no-explicit-any` is a warning rather than an
+error, so the count stays visible without failing CI on a decision that has a
+date on it. Make it an error when the generated types land.
+
 ## No assertion library, no HTTP client dependency
 
 Steps use Node's built-in `fetch` and `node:assert/strict`. The suite's only
 runtime dependencies are Cucumber and the TypeScript loader. Fewer moving parts,
 nothing to keep in sync with a Drift version.
 
-## Deferred / nice-to-have
+## Known trade-offs / next
 
-A small **load scenario** over `/discover` + `/crawl` enqueue — to show queue
-behaviour under concurrency — maps directly to the K6 canary story and would be
-a natural addition. The BDD suite alone closes the "runnable testing" gap; the
-load pass is optional colour.
+**Nothing records which Drift a green run proved the contract against.** The suite
+checks out `hipuku/drift@main`, so a report says the contract held — without
+saying held *for what*. A green run is evidence only if it names its subject. The
+fix waits on Drift tagging releases: print the tag or commit in the run and carry
+it into the HTML report.
+
+**Five `any`, waiting on generated types.** See above. Dated, not forgotten.
+
+**The export cannot be tested at all.** The most valuable thing Drift produces is
+the diagnosis, and it is assembled in the client — so the suite pins the raw
+material rather than the artefact. This is recorded above as a consequence of
+Drift's architecture rather than a scoping choice here, and it is tracked as
+drift issue #3. If that endpoint lands, `export.feature` is the natural home and
+this suite gains its most valuable target.
+
+**No load scenario.** A small pass over `/discover` and `/crawl` enqueue would
+show queue behaviour under concurrency and maps directly to the K6 canary story.
+The BDD suite alone closes the "runnable testing" gap; the load pass is optional
+colour.
+
+**No formatter.** Lint and typecheck both run in CI as of 2026-08-30; formatting
+is still by hand.
