@@ -14,6 +14,11 @@ jobs:
   bdd:
     runs-on: ubuntu-latest
 
+    # Without this the job inherits the six-hour default, so a run that stalls
+    # rather than fails burns an hour of anyone's attention before anyone looks.
+    # Twenty minutes is roughly four times the longest green run.
+    timeout-minutes: 20
+
     # Drift runs crawls as BullMQ jobs on Redis, so the suite stands up a real
     # Redis alongside, which is closer to production than mocking the queue.
     services:
@@ -82,8 +87,14 @@ jobs:
           DRIFT_WEBHOOK_SECRET: "drift-tests-secret"
         run: |
           npm run dev:server > ../drift-server.log 2>&1 &
-          echo "waiting for Drift on :3001"
+          server=$!
+          echo "waiting for Drift on :3001 (pid $server)"
           for i in $(seq 1 45); do
+            # If the server died, say so now rather than spending the rest of
+            # the loop proving a dead port is closed.
+            if ! kill -0 "$server" 2>/dev/null; then
+              echo "Drift exited before it answered:"; cat ../drift-server.log; exit 1
+            fi
             # A missing `url` is a documented, deterministic 400: the cheapest
             # proof the API is answering, with no Redis, Playwright or network
             # involved. `discover.feature` asserts that status, so this probe is
@@ -124,8 +135,11 @@ jobs:
           DRIFT_VERSION: ${{ env.DRIFT_VERSION }}
         run: npm run test:ci
 
-      - name: Drift server log (on failure)
-        if: failure()
+      # Unconditional, not `if: failure()`. A step killed by a signal, which is
+      # how this job failed on 2026-08-31 with exit 143, can take the guarded
+      # step with it and leave the run with nothing to read.
+      - name: Drift server log
+        if: always()
         run: cat drift-server.log || true
 
       - name: Upload the HTML report
