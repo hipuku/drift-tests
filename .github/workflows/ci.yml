@@ -99,7 +99,13 @@ jobs:
             # proof the API is answering, with no Redis, Playwright or network
             # involved. `discover.feature` asserts that status, so this probe is
             # a consequence of a tested rule rather than a private assumption.
-            if [ "$(curl -s -o /dev/null -w '%{http_code}' -X POST localhost:3001/discover \
+            # --connect-timeout and --max-time are load-bearing. Without them a
+            # socket that accepts and never answers blocks curl forever, and the
+            # 45-iteration bound stops bounding anything: that is how this step
+            # ran for nineteen minutes on 2026-08-31 inside a loop that cannot
+            # take more than a minute.
+            if [ "$(curl -s --connect-timeout 2 --max-time 5 \
+                    -o /dev/null -w '%{http_code}' -X POST localhost:3001/discover \
                     -H 'content-type: application/json' -d '{}')" = "400" ]; then
               echo "Drift is up"; exit 0
             fi
