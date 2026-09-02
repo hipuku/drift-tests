@@ -24,7 +24,7 @@ validate a real-time platform before release, here applied to my own product.
 | `webhook-delivery.feature` | A finished crawl is POSTed to the callback URL end to end: `crawl.completed` with the audit, plus the `x-drift-event` and HMAC `x-drift-signature` headers, using an allowlisted loopback receiver. |
 
 Every assertion was verified by hand against a running Drift before it was
-written, so the expected behaviour is known, not guessed.
+written, so the expected behaviour is known rather than assumed.
 
 ## Hermetic by design
 
@@ -90,8 +90,8 @@ tag.
 ## What's intentionally not here
 
 The diagnosis **export** (`health`/`findings`/`verdicts`/`rules`) is assembled in
-Drift's client, not exposed by the API, so it isn't a black-box target;
-this suite pins the `/audit` summary and contrast findings the export is built
+Drift's client and the API does not expose it, so it is not a black-box target.
+This suite pins the `/audit` summary and contrast findings the export is built
 from. See [DESIGN.md](DESIGN.md) for the reasoning.
 
 ## Stack

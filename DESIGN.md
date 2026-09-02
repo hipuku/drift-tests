@@ -71,7 +71,7 @@ keeps the suite hermetic: no public endpoint, still deterministic.
 ## The export is client-side, so it isn't a black-box target
 
 The diagnosis export (`health`/`findings`/`verdicts`/`rules`) is assembled in
-Drift's React client from the `/audit` response, not returned by any endpoint.
+Drift's React client from the `/audit` response. No endpoint returns it.
 The suite therefore pins the raw material the export is built from, the audit
 `summary` counts and the `contrast` findings, in place of an artefact the API
 does not serve. If a JSON-export endpoint is added to the backend later, a
