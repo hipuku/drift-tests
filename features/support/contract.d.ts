@@ -81,40 +81,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/crawl/{jobId}/typography": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Typography inventory only */
-        get: operations["getTypography"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/crawl/{jobId}/colours": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Colour clusters only */
-        get: operations["getColours"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
 }
 export interface webhooks {
     crawlFinished: {
@@ -447,92 +413,6 @@ export interface operations {
                 };
             };
             /** @description The crawl has not finished (never a 200 all-zeros audit). */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    getTypography: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The id returned by `POST /crawl`. */
-                jobId: components["parameters"]["JobId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Deterministic typography inventory derived from the completed crawl. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": Record<string, never>;
-                };
-            };
-            /** @description No such job. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description The crawl has not finished. */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-        };
-    };
-    getColours: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The id returned by `POST /crawl`. */
-                jobId: components["parameters"]["JobId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Perceptually clustered colours with usage. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        clusters?: Record<string, never>[];
-                        clusterCount?: number;
-                        distinctColours?: number;
-                    };
-                };
-            };
-            /** @description No such job. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
-            };
-            /** @description The crawl has not finished. */
             409: {
                 headers: {
                     [name: string]: unknown;
