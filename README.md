@@ -26,6 +26,21 @@ validate a real-time platform before release, here applied to my own product.
 Every assertion was verified by hand against a running Drift before it was
 written, so the expected behaviour is known rather than assumed.
 
+## Does it actually catch anything
+
+A green run proves the suite ran. It does not prove the suite would have
+noticed. So there is a recorded run against a deliberately broken Drift:
+[docs/a-failing-run.md](./docs/a-failing-run.md).
+
+One line changed, turning the `409` on an unfinished audit into a `200` with an
+all-zeros audit, which is the exact failure `lifecycle.feature` was written to
+prevent and is not obviously wrong on a screen. **16 of 17 scenarios still
+passed**, and the one that failed named the scenario, the step, the file and the
+line, and the difference between what was promised and what arrived.
+
+`npm run mutation` re-runs the whole thing: green, break, red for the right
+reason, restore.
+
 ## Hermetic by design
 
 The suite never touches the public internet. It serves a small,

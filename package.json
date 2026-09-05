@@ -11,6 +11,7 @@
   "scripts": {
     "test": "NODE_OPTIONS=\"--import tsx\" cucumber-js",
     "test:ci": "NODE_OPTIONS=\"--import tsx\" cucumber-js --format progress --format html:reports/cucumber.html",
+    "mutation": "bash scripts/mutation-check.sh",
     "generate": "openapi-typescript ${DRIFT_SPEC:-../drift/openapi.yaml} -o features/support/contract.d.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
