@@ -14,6 +14,7 @@
     "generate": "openapi-typescript ${DRIFT_SPEC:-../drift/openapi.yaml} -o features/support/contract.d.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
+    "lint:prose": "node scripts/check-punctuation.mjs",
     "lint:fix": "eslint . --fix"
   },
   "devDependencies": {
