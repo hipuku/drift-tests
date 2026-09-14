@@ -54,14 +54,27 @@ Then("the summary reports at least one contrast pair failing AA", function (this
   assert.ok(this.audit?.summary?.contrastFailingAA >= 1, "expected a failing-AA contrast pair");
 });
 
-Then("every contrast finding cites no more pages than were crawled", function (this: DriftWorld) {
+Then("every colour and contrast finding cites only pages that were crawled", function (this: DriftWorld) {
   const crawled: number = this.audit?.summary?.pages ?? 0;
-  const findings: any[] = this.audit?.contrast ?? [];
-  for (const f of findings) {
-    const cited = Array.isArray(f.pages) ? f.pages.length : 0;
-    assert.ok(
-      cited <= crawled,
-      `contrast pair ${f.foreground}/${f.background} cites ${cited} pages but only ${crawled} were crawled`,
-    );
+  assert.equal(crawled, this.fixture.pageUrls.length, "summary.pages is not the number of pages crawled");
+  const allowed = new Set(this.fixture.pageUrls);
+
+  const cited: { label: string; pages: unknown }[] = [
+    ...(this.audit?.contrast ?? []).map((f: { foreground: string; background: string; pages: unknown }) => ({
+      label: `contrast pair ${f.foreground}/${f.background}`,
+      pages: f.pages,
+    })),
+    ...(this.audit?.colourFamilies ?? []).flatMap((family: { swatches: { hex: string; pages: unknown }[] }) =>
+      family.swatches.map((s) => ({ label: `colour ${s.hex}`, pages: s.pages })),
+    ),
+  ];
+  assert.ok(cited.length > 0, "no colour or contrast findings to check");
+
+  for (const { label, pages } of cited) {
+    assert.ok(Array.isArray(pages), `${label} has no pages array`);
+    assert.ok(pages.length <= crawled, `${label} cites ${pages.length} pages but ${crawled} were crawled`);
+    for (const page of pages) {
+      assert.ok(allowed.has(page), `${label} cites ${String(page)}, which was not crawled`);
+    }
   }
 });

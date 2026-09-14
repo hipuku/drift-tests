@@ -18,5 +18,5 @@ Feature: The audit
     And the summary reports at least one type size off the scale
     And the summary reports at least one contrast pair failing AA
 
-  Scenario: No token is attributed to more pages than were crawled
-    Then every contrast finding cites no more pages than were crawled
+  Scenario: Colour and contrast findings cite only pages that were crawled
+    Then every colour and contrast finding cites only pages that were crawled
