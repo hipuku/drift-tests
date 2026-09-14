@@ -1,154 +1,118 @@
 # Design notes
 
-Why this suite is shaped the way it is. Decisions, and the trade-offs behind
-them. It is not a tutorial.
+Decisions behind this suite and what each one costs.
 
-## Black-box, over the wire
+## Over HTTP only
 
-The suite talks to Drift only through its HTTP API, exactly as any other client
-would. It imports nothing from Drift and knows nothing about its internals. That
-is the point: it proves the *running service* honours its contract, which unit
-tests cannot. It is the same outside-in acceptance shape used
-to validate a live platform before release, on code I own.
+The suite reaches Drift through its HTTP API and imports nothing from it. Each scenario checks a
+response from a running service with Redis, BullMQ and Playwright behind it.
 
-## Hermetic fixture instead of the live web
+## A local fixture site
 
-Early drafts pointed Drift at `example.com`. That made the suite depend on a
-third party's uptime, markup and DNS, and a stable *audit* was impossible,
-since the site's tokens can change under you. So the suite serves its own
-[fixture site](features/support/fixtureSite.ts): three same-origin pages on an
-ephemeral `127.0.0.1` port, started once in `BeforeAll`.
+Pointing Drift at a public site makes the suite depend on that site's uptime, markup and DNS, and
+the audit changes whenever the site does. The suite serves its own
+[fixture site](features/support/fixtureSite.ts) instead: three pages on an ephemeral `127.0.0.1`
+port, started once in `BeforeAll`, with no sitemap and no `robots.txt`.
 
-The fixture is **deliberately inconsistent**, with values chosen to trip
-specific audit signals so scenarios can assert exact outcomes:
+The stylesheet is inconsistent on purpose, so scenarios can assert specific findings:
 
-- `#3366cc` beside `#3467cc` → a perceptually near-duplicate colour (ΔE ≈ 0.3).
-- `padding: 13px` / `7px` → off a 4px grid.
-- `font-size: 15/23/31px` → off the closest modular scale.
-- `#999` text on `#fff` → 2.85:1, fails WCAG AA for normal text.
+- `#3366cc` and `#3467cc`: CIEDE2000 ΔE 0.34, a near-duplicate colour.
+- `padding: 13px` and `7px`: off the 4px grid.
+- `font-size` 15, 23 and 31px: off the fitted modular scale.
+- `#999999` text on `#ffffff`: 2.85:1, below AA for normal text.
 
-Same input, same audit, every run.
+## An explicit page list for crawls
 
-## Deterministic crawls via an explicit page list
+Crawl scenarios send all three fixture URLs as `pages` instead of relying on Drift's link walk.
+Discovery has its own scenario in `discover.feature`, and a crawl scenario that also depended on
+discovery order would fail for two unrelated reasons.
 
-Crawls pass an explicit absolute `pages` array (all three fixture URLs) rather
-than relying on BFS discovery. Discovery *is* tested separately, in
-`discover.feature`, but the crawl-dependent scenarios shouldn't also depend on
-discovery's page ordering. One behaviour per scenario.
+## The failed crawl
 
-## The "zero pages" failure path
+A crawl that reads no page must end `failed` with a reason, and its `/audit` must be `409`. An
+all-zeros `200` audit looks like a site with no colours. The suite crawls `http://127.0.0.1:9/`:
+the URL passes Drift's validation and is queued, and nothing listens on port 9, so the crawl fails
+in Playwright.
 
-The most valuable lifecycle assertion is the negative one: a crawl that reaches
-zero usable pages must end `failed` with a reason, and its `/audit` must be a
-`409`, never a `200` all-zeros audit that looks like a real, clean result. The
-suite forces this by crawling `http://127.0.0.1:9/`: syntactically valid, so it
-passes edge validation and is queued, but nothing listens there, so the crawl
-fails for real.
+## Page attribution
 
-## The aggregation invariant
+Colour swatches and contrast pairs each carry the pages they appeared on. `audit.feature` checks
+that `summary.pages` equals the number of fixture pages, that no entry cites more pages than that,
+and that every cited URL is a fixture page. A single-page test cannot catch an aggregation that
+counts one page twice or keeps pages from another crawl. The other inventory entries carry tags
+and properties instead of pages, so they are not checked.
 
-`audit.feature` locks one invariant that no single-page test can catch: **a
-token is never attributed to more pages than were crawled.** It is asserted over
-the contrast findings' `pages[]` against `summary.pages`. This is the kind of
-cross-page bookkeeping bug that hides until aggregation runs at scale.
+## Webhooks
 
-## Webhooks: guard rails and delivery
+`webhooks.feature` checks the callback URL at enqueue time: loopback that is not allowlisted,
+private, non-HTTP and non-string callbacks are each a `422` on the enqueue request.
 
-Two feature files. `webhooks.feature` asserts the **enqueue-time** guard rails:
-loopback, private and non-HTTP `callbackUrl`s refused with `422` while the caller
-is still on the line. `webhook-delivery.feature` then exercises a **successful
-delivery** end to end: the suite stands up a loopback receiver, enqueues a crawl
-with that receiver as the callback, and asserts the finished audit arrives as a
-signed `crawl.completed`.
+`webhook-delivery.feature` starts a receiver on `127.0.0.1`, enqueues a crawl with it as the
+callback, and checks that `crawl.completed` arrives with the audit, the `x-drift-event` header, and
+an `x-drift-signature` equal to the HMAC-SHA256 of the raw body under `DRIFT_WEBHOOK_SECRET`.
 
-Delivery to a loopback receiver only works because Drift's SSRF guard now takes
-an opt-in `DRIFT_WEBHOOK_ALLOWED_HOSTS` allowlist. The backend under test is
-started with `127.0.0.1` allowlisted and a `DRIFT_WEBHOOK_SECRET` set. That is
-the same mechanism a real deployment uses to allow a trusted internal callback
-host, so the test rides a genuine feature rather than a test-only backdoor. It
-keeps the suite hermetic: no public endpoint, still deterministic.
+Delivery to a loopback receiver works because Drift's `DRIFT_WEBHOOK_ALLOWED_HOSTS` exempts listed
+hosts from the address check. CI starts Drift with `127.0.0.1` listed and a secret set. A deployment
+uses the same setting for an internal receiver, so the test uses no test-only code path. The
+allowlist matches the host as written, so the loopback scenario uses `localhost`, which is not
+listed and still resolves to loopback.
 
-## The export is client-side, so it isn't a black-box target
+## The export is not tested
 
-The diagnosis export (`health`/`findings`/`verdicts`/`rules`) is assembled in
-Drift's React client from the `/audit` response. No endpoint returns it.
-The suite therefore pins the raw material the export is built from, the audit
-`summary` counts and the `contrast` findings, in place of an artefact the API
-does not serve. If a JSON-export endpoint is added to the backend later, a
-`export.feature` becomes the natural home for that contract.
+Drift's export (`health`, `findings`, `verdicts`, `rules`) is built in its React client from the
+`/audit` response. No endpoint returns it, so the suite checks the `summary` counts and `contrast`
+findings the export is built from. Drift issue #3, which would have added an export endpoint, was
+closed while Drift's public deployment stays a replay. If an endpoint is added, `export.feature`
+would test it.
 
-## What black-box costs, and where it is paid
+## The cost of importing nothing: `any`
 
-The decision above has a price. It is written down here so a reader meets it in
-the design notes and not in a diff.
+Without Drift's types, response bodies are `any` and narrowed at each assertion. Five
+`@typescript-eslint/no-explicit-any` warnings remain: three in `world.ts` (the response body, the
+stored audit, the JSON parser's return) and two in `webhookReceiver.ts` (the received body and its
+parse). Importing `SiteAudit` from Drift would type the suite against the implementation it tests,
+and it would still compile after the contract changed.
 
-Importing nothing from Drift means importing Drift's **types** is also off the
-table, so response bodies arrive as `any` and are narrowed by hand at each
-assertion. Six warnings remain, over five declarations in `world.ts`,
-`webhookReceiver.ts` and `audit.steps.ts` plus one return type. That is the cost
-of the boundary. A suite
-that imported `SiteAudit` would typecheck against the implementation it is
-supposed to be testing from the outside, and would go green against a contract
-that had silently changed shape.
+Types generated from Drift's published `openapi.yaml` avoid both problems.
+`features/support/contract.d.ts` is generated by `npm run generate`, and CI regenerates it against
+the Drift it clones and fails if the committed file differs. The steps do not use it yet. The
+types were first committed without the generator script, and two response descriptions were still
+the old text a month after Drift changed them. The regeneration check was added after that.
 
-The honest middle path exists: Drift publishes `openapi.yaml`, so the response
-types can be **generated from the published contract** rather than imported from
-the source. That keeps the suite black-box against the implementation while typed
-against the promise. It waited on Drift tagging releases, so the generated types
-would have a version to pin to; v0.1.0 is that tag.
+The rule stays a warning until the steps use the generated types, then becomes an error.
 
-Until then `@typescript-eslint/no-explicit-any` is set to warn. The count stays
-visible and CI does not fail on a decision that has a date on it. Make it an
-error when the generated types land.
+## No assertion library or HTTP client
 
-## No assertion library, no HTTP client dependency
+Steps use Node's `fetch` and `node:assert/strict`. The dev dependencies are Cucumber, tsx,
+TypeScript, ESLint and `openapi-typescript`, and there are no runtime dependencies to keep in step
+with a Drift version.
 
-Steps use Node's built-in `fetch` and `node:assert/strict`. The suite's only
-runtime dependencies are Cucumber and the TypeScript loader. Fewer moving parts,
-nothing to keep in sync with a Drift version.
+## Which Drift a run tested
 
-## Which Drift a run proved the contract against
+Drift was `0.0.0` with no tags until `v0.1.0`. A green report did not say which build it had
+tested, and a deliberate breaking change in Drift would have looked like a regression.
 
-Drift shipped on `0.0.0` with no tags until v0.1.0, so a green report here said
-the contract held without saying held for what, and a deliberate breaking change
-in Drift would have arrived as a failing test with no way to tell it from a
-regression.
+Drift's API reports no version, so CI takes it from the checkout: `git describe --tags --always`,
+which gives the nearest tag with a commit count and SHA, or a SHA alone. It is passed to the suite
+as `DRIFT_VERSION`, printed at startup, attached to the first scenario in the HTML report, and
+written to the job summary and the artifact name. Without `DRIFT_VERSION` the suite reports
+`unrecorded`.
 
-The provenance comes from the checkout rather than from the API, because nothing
-Drift serves reports a version. CI runs `git describe --tags` over the Drift it
-cloned, which yields the released tag, or a SHA when the run is not on one, and
-passes it in as `DRIFT_VERSION`. The suite prints it at startup and attaches it
-to the first scenario, so it is in the HTML report a reader is handed; the job
-summary and the artefact name carry it too. A run with `DRIFT_VERSION` unset
-reports `unrecorded` and does not guess.
-
-Testing a specific release is `workflow_dispatch` with `drift_ref`. The default
-stays Drift's main branch: pinning every run to the last tag would mean the
-suite stopped seeing changes until someone remembered to move the pin, which is
-the failure mode the pin was meant to prevent.
+CI tests Drift's `main` by default. A manual run with `drift_ref` tests a tag, branch or SHA.
+Pinning every run to the latest tag would stop the suite seeing Drift changes until someone moved
+the pin.
 
 ## Known trade-offs / next
 
-**Six `any` warnings, and the types they are waiting on now exist.**
-`features/support/contract.d.ts` is generated from Drift's `openapi.yaml` by
-`npm run generate`, and CI regenerates it against the Drift it clones and fails
-if the committed file has moved. The remaining work is adopting the generated
-types at the six sites and making `@typescript-eslint/no-explicit-any` an error.
-
-The check earned itself before it was written. The types were committed without
-a generator, so the spec moved and they did not: two response descriptions were
-still the pre-sweep text a month after Drift changed them, and nothing said so.
-
-**The export cannot be tested at all.** The most valuable thing Drift produces is
-the diagnosis, and it is assembled in the client, so the suite pins the raw
-material and the artefact goes untested. The section above records why: this
-follows from Drift's architecture, and it is tracked as drift issue #3. If that endpoint lands, `export.feature` is the natural home and
-this suite gains its most valuable target.
-
-**No load scenario.** A small pass over `/discover` and `/crawl` enqueue would
-show queue behaviour under concurrency and maps directly to the K6 canary story.
-The BDD suite alone closes the "runnable testing" gap; the load pass is optional
-colour.
-
-**No formatter.** Lint and typecheck both run in CI as of 2026-08-30; formatting
-is still by hand.
+- **Five `any` warnings.** Adopt `contract.d.ts` in the steps and make `no-explicit-any` an error.
+- **CI does not run on Drift pushes.** A Drift change reaches this suite on the next push here or a
+  manual run. A `repository_dispatch` from Drift's CI would close that.
+- **No scenario reads `queued` or `active`.** Every lifecycle scenario waits for a terminal status.
+  Drift reported BullMQ's `waiting` where the contract says `queued` until 2026-09-14, and nothing
+  here noticed.
+- **The export is not tested.** It is built in Drift's client.
+- **Not tested:** `crawl.failed` delivery, delivery retries, redirects from a receiver, and WebSocket
+  progress.
+- **No load scenario.** A pass over `/discover` and `/crawl` enqueue would show queue behaviour
+  under concurrency.
+- **No formatter.** Lint and typecheck have run in CI since 2026-08-30. Formatting is by hand.
