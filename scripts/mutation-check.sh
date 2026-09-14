@@ -1,45 +1,78 @@
 #!/usr/bin/env bash
 #
-# Does this suite actually detect anything?
+# Runs the suite against Drift, breaks one line of Drift, runs it again, and
+# checks that it failed on the 409 step. Then restores Drift.
 #
-# Stands the stack up, runs the suite green, breaks Drift in one line, runs it
-# again, and asserts that it failed for the right reason. Then puts Drift back.
+# The restore runs from an EXIT trap, so an interrupted or failed run also
+# puts app.ts back.
 #
-# The restore is a trap rather than a final line: a script that leaves the
-# repository next door broken when it is interrupted is worse than no script.
+# Needs Redis, Chromium for Playwright, and nothing else on the port.
 #
 #   ./scripts/mutation-check.sh            expects ../drift
 #   DRIFT=~/code/drift ./scripts/mutation-check.sh
+#   PORT=3101 ./scripts/mutation-check.sh
 #
 set -euo pipefail
 
 DRIFT="${DRIFT:-../drift}"
 PORT="${PORT:-3001}"
+URL="http://127.0.0.1:$PORT"
 TARGET="$DRIFT/src/server/app.ts"
 BACKUP="$(mktemp)"
 SERVER_PID=""
 
+# POST /discover with no url is a 400 with no Redis, Playwright or network
+# involved. Bounded by --max-time: a socket that accepts and never answers
+# would otherwise hold curl, and the loop around it, indefinitely.
+answering() {
+  [ "$(curl -s --connect-timeout 2 --max-time 5 -o /dev/null -w '%{http_code}' \
+        -X POST "$URL/discover" -H 'content-type: application/json' -d '{}')" = "400" ]
+}
+
+stop_drift() {
+  [ -n "$SERVER_PID" ] || return 0
+  kill "$SERVER_PID" 2>/dev/null || true
+  SERVER_PID=""
+  # The next run must reach the next server. If this one still holds the port,
+  # the suite would run against the build it was meant to replace.
+  for _ in $(seq 1 20); do
+    answering || return 0
+    sleep 0.5
+  done
+  echo "Drift is still answering on :$PORT after being stopped." >&2
+  exit 1
+}
+
 cleanup() {
-  [ -n "$SERVER_PID" ] && kill "$SERVER_PID" 2>/dev/null || true
+  # Restore first: stop_drift can exit, and an exit inside a trap skips the rest.
   [ -s "$BACKUP" ] && cp "$BACKUP" "$TARGET"
   rm -f "$BACKUP"
+  stop_drift || true
   # Say so, because a silent restore is indistinguishable from no restore.
   echo "Drift restored: $(cd "$DRIFT" && git status --porcelain -- src/server/app.ts | wc -l | tr -d ' ') changes to app.ts"
 }
 trap cleanup EXIT
 
 [ -f "$TARGET" ] || { echo "No Drift at $DRIFT. Set DRIFT=/path/to/drift." >&2; exit 1; }
+if answering; then
+  echo "Something is already answering on :$PORT. Stop it, or set PORT." >&2
+  exit 1
+fi
 cp "$TARGET" "$BACKUP"
 
 start_drift() {
-  [ -n "$SERVER_PID" ] && { kill "$SERVER_PID" 2>/dev/null || true; sleep 1; }
+  stop_drift
+  # exec, so SERVER_PID is tsx and not a subshell. Killing a subshell leaves
+  # its children running: the first version of this script did that, kept the
+  # unmodified server on the port, and reported the suite as blind.
   ( cd "$DRIFT" \
-    && REDIS_URL="${REDIS_URL:-redis://127.0.0.1:6379}" PORT="$PORT" \
+    && exec env REDIS_URL="${REDIS_URL:-redis://127.0.0.1:6379}" PORT="$PORT" \
        DRIFT_WEBHOOK_ALLOWED_HOSTS=127.0.0.1 DRIFT_WEBHOOK_SECRET=drift-tests-secret \
-       npm run dev:server ) > /tmp/drift-mutation.log 2>&1 &
+       node_modules/.bin/tsx --tsconfig tsconfig.runtime.json src/server/index.ts ) \
+    > /tmp/drift-mutation.log 2>&1 &
   SERVER_PID=$!
   for _ in $(seq 1 45); do
-    curl -s -o /dev/null "http://127.0.0.1:$PORT/discover" && return 0
+    answering && return 0
     kill -0 "$SERVER_PID" 2>/dev/null || { echo "Drift died on boot:" >&2; tail -20 /tmp/drift-mutation.log >&2; exit 1; }
     sleep 1
   done
@@ -48,13 +81,12 @@ start_drift() {
 
 echo "── 1. the suite against an unmodified Drift"
 start_drift
-DRIFT_BASE_URL="http://127.0.0.1:$PORT" npm test
+DRIFT_URL="$URL" npm test
 
 echo
 echo "── 2. breaking the 409 on an unfinished audit"
-# lifecycle.feature pins: a failed crawl's audit is a 409, never a 200 with an
-# all-zeros audit. This is what you would write if you decided the endpoint
-# should always return an audit shape.
+# lifecycle.feature expects a 409 for the audit of a failed crawl. This makes
+# the endpoint return a 200 with an all-zeros audit instead.
 python3 - "$TARGET" <<'PY'
 import pathlib, sys
 p = pathlib.Path(sys.argv[1]); s = p.read_text()
@@ -67,11 +99,9 @@ PY
 echo
 echo "── 3. the suite against the broken Drift, which must fail"
 start_drift
-if DRIFT_BASE_URL="http://127.0.0.1:$PORT" npm test > /tmp/drift-mutation-run.log 2>&1; then
+if DRIFT_URL="$URL" npm test > /tmp/drift-mutation-run.log 2>&1; then
   echo >&2
-  echo "The suite PASSED against a Drift that returns 200 where it promises 409." >&2
-  echo "That is the failure this script exists to find: lifecycle.feature is not" >&2
-  echo "pinning what its wording says it pins." >&2
+  echo "The suite passed against a Drift that returns 200 where lifecycle.feature expects 409." >&2
   exit 1
 fi
 
@@ -81,7 +111,13 @@ grep -q 'returns status 409' /tmp/drift-mutation-run.log || {
   exit 1
 }
 
+grep -Eq 'scenarios \([0-9]+ passed, 1 failed\)' /tmp/drift-mutation-run.log || {
+  echo "More than the one lifecycle scenario failed. Read /tmp/drift-mutation-run.log:" >&2
+  tail -30 /tmp/drift-mutation-run.log >&2
+  exit 1
+}
+
 echo
 sed -n '/Failed scenarios/,$p' /tmp/drift-mutation-run.log
 echo
-echo "The suite caught it. docs/a-failing-run.md has the reading of this."
+echo "Failed on the 409 step only. docs/a-failing-run.md has a recorded run."
