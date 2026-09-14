@@ -1,11 +1,7 @@
 /**
- * Webhook steps.
- *
- * These assert the enqueue-time guard rails only: SSRF and validation
- * refusals, where the caller is still on the line to be told 422. Actual
- * delivery of `crawl.completed` / `crawl.failed` (HMAC signing, retries) is
- * covered by Drift's own unit tests, because the SSRF guard refuses the
- * loopback address a hermetic in-CI receiver would have to use.
+ * Webhook enqueue steps. The callback URL is validated when the crawl is
+ * enqueued, so each refusal is a 422 on the enqueue request. Delivery is
+ * covered by webhook-delivery.feature.
  */
 
 import { When } from "@cucumber/cucumber";
