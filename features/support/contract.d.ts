@@ -178,7 +178,7 @@ export interface components {
             pages?: number;
             distinctColours?: number;
             colourFamilies?: number;
-            /** @description Colours within ~2 ΔE of another (genuine redundancy). */
+            /** @description Colours less than ΔE 2 from another colour on the site. */
             colourNearDuplicates?: number;
             fontFamilies?: number;
             typeSizes?: number;
