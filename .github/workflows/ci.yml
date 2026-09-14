@@ -60,9 +60,8 @@ jobs:
           echo "DRIFT_VERSION=$version" >> "$GITHUB_ENV"
           echo "Drift under test: \`$version\`" >> "$GITHUB_STEP_SUMMARY"
 
-      # Match the app under test. drift declares `^20.19.0 || >=22.12.0` and
-      # pins 22 in .nvmrc; booting it here on a different major would mean the
-      # contract is proved against a runtime nobody ships.
+      # The Node version drift pins in .nvmrc (22; its engines field is
+      # >=22.12.0), so the backend runs here on the runtime it declares.
       - name: Set up Node
         uses: actions/setup-node@v7
         with:
