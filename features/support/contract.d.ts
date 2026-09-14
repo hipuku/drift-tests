@@ -35,7 +35,7 @@ export interface paths {
         put?: never;
         /**
          * Enqueue a crawl
-         * @description Validates the URL at the edge (a bad URL is a 422, no job queued) and enqueues a crawl. Poll `/crawl/{jobId}/result`, or pass a `callbackUrl` to be notified. Page URLs must be absolute and same-origin; a relative or absent `pages` list falls back to a breadth-first walk from the root (capped at `MAX_CRAWL_PAGES = 10`).
+         * @description Checks the URL before queueing: a URL that cannot name a site is a 422 and no job is created. Poll `/crawl/{jobId}/result`, or pass a `callbackUrl`. Page URLs that are not absolute or not on the root's origin are dropped. With no page left, or no `pages`, the crawler walks same-origin links from the root. At most 10 pages (`MAX_CRAWL_PAGES`).
          */
         post: operations["enqueueCrawl"];
         delete?: never;
@@ -142,16 +142,19 @@ export interface components {
              *     ]
              */
             pages?: string[];
-            /** @description Page ceiling for the BFS fallback. Clamped to [1, 10]. */
+            /** @description Page limit when `pages` is absent. Clamped to [1, 10]. */
             maxPages?: number;
             /**
              * Format: uri
-             * @description Public http(s) endpoint to POST the finished audit to. SSRF-guarded (loopback/private/link-local refused unless allowlisted via `DRIFT_WEBHOOK_ALLOWED_HOSTS`) and validated at enqueue time.
+             * @description http(s) endpoint to POST the finished audit or failure to. Checked at enqueue time: every address the host resolves to must be public (loopback, private, carrier-grade NAT, link-local, unique-local, multicast and IPv4-mapped forms of those are refused), unless the host is listed in `DRIFT_WEBHOOK_ALLOWED_HOSTS`.
              */
             callbackUrl?: string;
         };
         JobResult: {
-            /** @enum {string} */
+            /**
+             * @description BullMQ's waiting, delayed, prioritized and waiting-children states are reported as `queued`.
+             * @enum {string}
+             */
             status: "queued" | "active" | "completed" | "failed";
             /** @description The raw crawl result once completed; null otherwise. */
             result?: components["schemas"]["CrawlResult"] | null;
@@ -294,7 +297,7 @@ export interface operations {
                     "application/json": components["schemas"]["Error"];
                 };
             };
-            /** @description Invalid, unreachable, or non-http(s) URL, with a human-readable message. */
+            /** @description A URL that cannot name a site (a scheme other than http or https, or a host with no dot), or a site that could not be read. The message is human-readable. */
             422: {
                 headers: {
                     [name: string]: unknown;
@@ -371,7 +374,7 @@ export interface operations {
                     "application/json": components["schemas"]["JobResult"];
                 };
             };
-            /** @description No such job. */
+            /** @description No such job, or a job the queue no longer holds. */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -403,7 +406,7 @@ export interface operations {
                     "application/json": components["schemas"]["SiteAudit"];
                 };
             };
-            /** @description No such job. */
+            /** @description No such job, or a job the queue no longer holds. */
             404: {
                 headers: {
                     [name: string]: unknown;
