@@ -20,6 +20,13 @@ export const DRIFT_URL = process.env.DRIFT_URL ?? "http://127.0.0.1:3001";
  */
 export const DRIFT_VERSION = process.env.DRIFT_VERSION ?? "unrecorded";
 
+/**
+ * The secret the backend under test signs webhooks with. It has to match the
+ * backend's DRIFT_WEBHOOK_SECRET; the default is the value CI and
+ * `npm run mutation` start it with.
+ */
+export const DRIFT_WEBHOOK_SECRET = process.env.DRIFT_WEBHOOK_SECRET ?? "drift-tests-secret";
+
 export interface ApiResponse {
   status: number;
   body: any;

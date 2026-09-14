@@ -4,12 +4,14 @@
  *
  * Requires the backend to run with DRIFT_WEBHOOK_ALLOWED_HOSTS including
  * 127.0.0.1 (so the loopback receiver is permitted) and DRIFT_WEBHOOK_SECRET
- * set (so the delivery is signed). The CI workflow sets both.
+ * set (so the delivery is signed). The suite checks the signature with its own
+ * DRIFT_WEBHOOK_SECRET, which defaults to the value CI gives the backend.
  */
 
 import assert from "node:assert/strict";
+import { createHmac } from "node:crypto";
 import { After, Then, When } from "@cucumber/cucumber";
-import { DriftWorld } from "../support/world.js";
+import { DRIFT_WEBHOOK_SECRET, DriftWorld } from "../support/world.js";
 import { startWebhookReceiver } from "../support/webhookReceiver.js";
 
 When(
@@ -51,6 +53,12 @@ Then("the webhook is signed", function (this: DriftWorld) {
     typeof sig === "string" && sig.startsWith("sha256="),
     `expected an x-drift-signature (sha256=...). Is DRIFT_WEBHOOK_SECRET set on the backend? got ${sig}`,
   );
+  // The HMAC of the raw body under the secret the backend was started with.
+  // A header that only looks right fails here.
+  const expected = `sha256=${createHmac("sha256", DRIFT_WEBHOOK_SECRET)
+    .update(this.deliveredWebhook!.raw)
+    .digest("hex")}`;
+  assert.equal(sig, expected, "x-drift-signature does not match the body under DRIFT_WEBHOOK_SECRET");
 });
 
 After(async function (this: DriftWorld) {

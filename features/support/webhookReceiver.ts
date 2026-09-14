@@ -1,11 +1,9 @@
 /**
- * A tiny webhook receiver on 127.0.0.1 that records what Drift POSTs to it.
+ * A webhook receiver on 127.0.0.1 that records what Drift POSTs to it.
  *
- * Drift's SSRF guard refuses loopback callback URLs by default, so the backend
- * under test is started with `DRIFT_WEBHOOK_ALLOWED_HOSTS=127.0.0.1` to permit
- * this receiver. That is the only reason a loopback receiver works, and it is
- * exactly the mechanism a real deployment would use to allowlist a trusted
- * internal endpoint.
+ * Drift's SSRF guard refuses loopback callback URLs by default. The backend
+ * under test is started with `DRIFT_WEBHOOK_ALLOWED_HOSTS=127.0.0.1`, the same
+ * setting a deployment uses to allow an internal receiver.
  */
 
 import http from "node:http";
@@ -13,6 +11,8 @@ import type { AddressInfo } from "node:net";
 
 export interface ReceivedWebhook {
   headers: Record<string, string | string[] | undefined>;
+  /** The body exactly as sent, which is what the signature is computed over. */
+  raw: string;
   body: any;
 }
 
@@ -40,7 +40,7 @@ export async function startWebhookReceiver(): Promise<WebhookReceiver> {
       } catch {
         // keep the raw string
       }
-      received.push({ headers: req.headers, body });
+      received.push({ headers: req.headers, raw, body });
       res.writeHead(200, { "content-type": "application/json" });
       res.end('{"ok":true}');
     });
