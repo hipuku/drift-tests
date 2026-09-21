@@ -21,7 +21,7 @@
   "devDependencies": {
     "@cucumber/cucumber": "^13.2.1",
     "@eslint/js": "^10.0.1",
-    "@types/node": "^22.20.2",
+    "@types/node": "^22.20.3",
     "eslint": "^10.10.0",
     "globals": "^17.12.0",
     "openapi-typescript": "^7.13.0",
