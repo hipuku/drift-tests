@@ -22,11 +22,11 @@
     "@cucumber/cucumber": "^13.3.0",
     "@eslint/js": "^10.0.1",
     "@types/node": "^22.20.5",
-    "eslint": "^10.12.0",
+    "eslint": "^10.13.0",
     "globals": "^17.13.0",
     "openapi-typescript": "^7.13.0",
     "tsx": "^4.23.15",
     "typescript": "^5.7.2",
-    "typescript-eslint": "^8.71.2"
+    "typescript-eslint": "^8.72.0"
   }
 }
