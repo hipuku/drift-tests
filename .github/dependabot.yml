@@ -19,6 +19,8 @@ updates:
         patterns: ['*']
     commit-message:
       prefix: 'deps'
+    # Without this Dependabot adds its own dependencies and javascript labels instead.
+    labels: ['deps']
     ignore:
       - dependency-name: '@types/node'
         update-types: ['version-update:semver-major']
@@ -33,3 +35,4 @@ updates:
     directory: /
     schedule:
       interval: monthly
+    labels: ['deps']

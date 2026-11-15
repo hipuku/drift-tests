@@ -1,0 +1,30 @@
+name: Bug
+description: The suite fails, passes or reports something it should not.
+labels: [fix]
+body:
+  - type: textarea
+    id: expected
+    attributes:
+      label: What it should do, and what it does
+      description: The scenario or step, and the line in README or DESIGN it contradicts, if there is one.
+    validations: { required: true }
+  - type: textarea
+    id: repro
+    attributes:
+      label: How to see it
+      description: The command or the CI run. The Cucumber output or the HTML report helps.
+    validations: { required: true }
+  - type: input
+    id: drift
+    attributes:
+      label: Drift version under test
+      description: The DRIFT_VERSION the run printed, or the Drift tag or commit.
+      placeholder: v0.2.0
+    validations: { required: true }
+  - type: input
+    id: where
+    attributes:
+      label: Where it ran
+      description: CI, or locally with the Node version.
+      placeholder: Locally, Node 22
+    validations: { required: true }
