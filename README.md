@@ -12,11 +12,11 @@ nothing from it and tests the running service from outside, before a change ship
 - **18 scenarios in six features:** job lifecycle, validation before queueing, page attribution,
   the SSRF check on webhook callbacks and signed delivery.
   [ARCHITECTURE § What the suite covers](ARCHITECTURE.md#what-the-suite-covers)
-- **No internet.** Drift crawls a fixture site the suite serves on `127.0.0.1`.
+- **No public site.** Drift crawls a fixture site the suite serves on `127.0.0.1`.
   [ARCHITECTURE § A local fixture site](ARCHITECTURE.md#a-local-fixture-site)
 - **Contract types from Drift's `openapi.yaml`**, regenerated and compared in CI.
   [ARCHITECTURE § Generated contract types](ARCHITECTURE.md#generated-contract-types)
-- **Every report names the Drift it tested.**
+- **CI reports name the Drift they tested**, and a local run does with `DRIFT_VERSION` set.
   [ARCHITECTURE § Which Drift a run tested](ARCHITECTURE.md#which-drift-a-run-tested)
 - **A recorded failing run** against a Drift with one line broken.
   [A failing run](docs/a-failing-run.md)

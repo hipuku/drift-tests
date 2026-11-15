@@ -62,8 +62,9 @@ redirects from a receiver, WebSocket progress and Drift's export. See
 
 ## Boundaries and security
 
-The suite makes no request off the machine. It talks to Drift at `DRIFT_URL` (default
-`http://127.0.0.1:3001`), and Drift crawls the fixture site and delivers webhooks on `127.0.0.1`.
+With the default `DRIFT_URL` (`http://127.0.0.1:3001`), everything the suite talks to is on the
+machine: Drift, the fixture site and the webhook receiver all listen on `127.0.0.1`. A `DRIFT_URL`
+that names another instance receives the startup probe and every API call.
 
 ### Over HTTP only
 
@@ -128,7 +129,7 @@ page.
 pages from another crawl. The other inventory entries carry tags and properties instead of pages,
 so they are not checked.
 
-### The export is not tested
+### Export coverage
 
 **Decision.** The suite checks the `/audit` `summary` counts and `contrast` findings that Drift's
 export (`health`, `findings`, `verdicts`, `rules`) is built from, not the export itself.
@@ -196,7 +197,7 @@ until someone moved the pin.
 
 ## Platform and stack
 
-### No assertion library or HTTP client
+### HTTP and assertions
 
 **Decision.** Steps use Node's `fetch` and `node:assert/strict`. The dev dependencies are Cucumber,
 tsx, TypeScript, ESLint, Prettier, markdownlint and `openapi-typescript`.
