@@ -32,7 +32,10 @@ Then("the failure carries a reason", function (this: DriftWorld) {
   assert.ok(typeof reason === "string" && reason.length > 0, "expected a failure reason");
 });
 
-Then("requesting its audit returns status {int}", async function (this: DriftWorld, status: number) {
-  const res = await this.get(`/crawl/${this.jobId}/audit`);
-  assert.equal(res.status, status, `expected ${status}, got ${res.status}`);
-});
+Then(
+  "requesting its audit returns status {int}",
+  async function (this: DriftWorld, status: number) {
+    const res = await this.get(`/crawl/${this.jobId}/audit`);
+    assert.equal(res.status, status, `expected ${status}, got ${res.status}`);
+  },
+);

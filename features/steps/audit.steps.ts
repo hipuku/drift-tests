@@ -13,7 +13,11 @@ Given("a completed crawl of the fixture site", async function (this: DriftWorld)
   assert.ok(this.jobId, `enqueue failed: ${JSON.stringify(enqueue.body)}`);
 
   this.terminal = await this.runCrawlToCompletion(this.jobId);
-  assert.equal(this.terminal.status, "completed", `crawl did not complete: ${this.terminal.error ?? ""}`);
+  assert.equal(
+    this.terminal.status,
+    "completed",
+    `crawl did not complete: ${this.terminal.error ?? ""}`,
+  );
 
   const res = await this.get(`/crawl/${this.jobId}/audit`);
   assert.equal(res.status, 200, `audit not available: ${res.status}`);
@@ -54,27 +58,40 @@ Then("the summary reports at least one contrast pair failing AA", function (this
   assert.ok(this.audit?.summary?.contrastFailingAA >= 1, "expected a failing-AA contrast pair");
 });
 
-Then("every colour and contrast finding cites only pages that were crawled", function (this: DriftWorld) {
-  const crawled: number = this.audit?.summary?.pages ?? 0;
-  assert.equal(crawled, this.fixture.pageUrls.length, "summary.pages is not the number of pages crawled");
-  const allowed = new Set(this.fixture.pageUrls);
+Then(
+  "every colour and contrast finding cites only pages that were crawled",
+  function (this: DriftWorld) {
+    const crawled: number = this.audit?.summary?.pages ?? 0;
+    assert.equal(
+      crawled,
+      this.fixture.pageUrls.length,
+      "summary.pages is not the number of pages crawled",
+    );
+    const allowed = new Set(this.fixture.pageUrls);
 
-  const cited: { label: string; pages: unknown }[] = [
-    ...(this.audit?.contrast ?? []).map((f: { foreground: string; background: string; pages: unknown }) => ({
-      label: `contrast pair ${f.foreground}/${f.background}`,
-      pages: f.pages,
-    })),
-    ...(this.audit?.colourFamilies ?? []).flatMap((family: { swatches: { hex: string; pages: unknown }[] }) =>
-      family.swatches.map((s) => ({ label: `colour ${s.hex}`, pages: s.pages })),
-    ),
-  ];
-  assert.ok(cited.length > 0, "no colour or contrast findings to check");
+    const cited: { label: string; pages: unknown }[] = [
+      ...(this.audit?.contrast ?? []).map(
+        (f: { foreground: string; background: string; pages: unknown }) => ({
+          label: `contrast pair ${f.foreground}/${f.background}`,
+          pages: f.pages,
+        }),
+      ),
+      ...(this.audit?.colourFamilies ?? []).flatMap(
+        (family: { swatches: { hex: string; pages: unknown }[] }) =>
+          family.swatches.map((s) => ({ label: `colour ${s.hex}`, pages: s.pages })),
+      ),
+    ];
+    assert.ok(cited.length > 0, "no colour or contrast findings to check");
 
-  for (const { label, pages } of cited) {
-    assert.ok(Array.isArray(pages), `${label} has no pages array`);
-    assert.ok(pages.length <= crawled, `${label} cites ${pages.length} pages but ${crawled} were crawled`);
-    for (const page of pages) {
-      assert.ok(allowed.has(page), `${label} cites ${String(page)}, which was not crawled`);
+    for (const { label, pages } of cited) {
+      assert.ok(Array.isArray(pages), `${label} has no pages array`);
+      assert.ok(
+        pages.length <= crawled,
+        `${label} cites ${pages.length} pages but ${crawled} were crawled`,
+      );
+      for (const page of pages) {
+        assert.ok(allowed.has(page), `${label} cites ${String(page)}, which was not crawled`);
+      }
     }
-  }
-});
+  },
+);

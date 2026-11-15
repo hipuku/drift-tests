@@ -115,4 +115,3 @@ the pin.
   progress.
 - **No load scenario.** A pass over `/discover` and `/crawl` enqueue would show queue behaviour
   under concurrency.
-- **No formatter.** Lint and typecheck have run in CI since 2026-08-30. Formatting is by hand.

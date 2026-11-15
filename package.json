@@ -16,7 +16,9 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "lint:prose": "node scripts/check-punctuation.mjs",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "devDependencies": {
     "@cucumber/cucumber": "^13.3.0",
@@ -25,6 +27,7 @@
     "eslint": "^10.14.0",
     "globals": "^17.14.0",
     "openapi-typescript": "^7.13.0",
+    "prettier": "^3.10.1",
     "tsx": "^4.23.15",
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.72.1"

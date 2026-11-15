@@ -23,5 +23,8 @@ Then("the response status is {int}", function (this: DriftWorld, status: number)
 
 Then("the response carries an error message", function (this: DriftWorld) {
   const body = this.lastResponse?.body;
-  assert.ok(body && typeof body.error === "string" && body.error.length > 0, "expected an error message");
+  assert.ok(
+    body && typeof body.error === "string" && body.error.length > 0,
+    "expected an error message",
+  );
 });
