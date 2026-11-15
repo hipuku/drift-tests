@@ -33,5 +33,16 @@
     "tsx": "^4.23.15",
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.72.2"
+  },
+  "overrides": {
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "^11.0.8"
+    },
+    "micromark-extension-math": {
+      "katex": "^0.19.1"
+    },
+    "@redocly/openapi-core": {
+      "brace-expansion": "^2.1.8"
+    }
   }
 }
