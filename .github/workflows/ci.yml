@@ -36,6 +36,24 @@ jobs:
       # than absolute: a rule that could only pass after a mechanical rewrite of
       # every file would have been turned off instead of adopted.
       - run: npm run lint:prose
+      # Markdown structure: heading order, list and code fence shape. Prettier
+      # owns wrapping and the docs standard owns voice, so rules that overlap
+      # with either are off (.markdownlint-cli2.jsonc).
+      - run: npm run lint:md
+
+  # Every relative link and heading anchor in the markdown resolves. Offline,
+  # so the check never fails because an outside site is slow. Its own job on
+  # Linux, because the action only downloads a Linux build of lychee.
+  links:
+    name: Links
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: lycheeverse/lychee-action@v2
+        with:
+          args: --offline --include-fragments --no-progress --hidden --exclude-path node_modules --exclude-path '(^|/)\.git/' './**/*.md'
+          fail: true
 
   format:
     name: Format

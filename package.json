@@ -16,6 +16,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "lint:prose": "node scripts/check-punctuation.mjs",
+    "lint:md": "markdownlint-cli2",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
@@ -26,6 +27,7 @@
     "@types/node": "^22.20.5",
     "eslint": "^10.14.0",
     "globals": "^17.14.0",
+    "markdownlint-cli2": "^0.24.1",
     "openapi-typescript": "^7.13.0",
     "prettier": "^3.10.1",
     "tsx": "^4.23.15",
