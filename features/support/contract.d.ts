@@ -253,7 +253,28 @@ export interface components {
             error: string;
         };
     };
-    responses: never;
+    responses: {
+        /** @description The server has a token set, and the request did not carry it. */
+        Unauthorized: {
+            headers: {
+                "WWW-Authenticate"?: "Bearer";
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /** @description The caller passed the rate limit, or the crawl queue is full. Retry after the number of seconds in `Retry-After`. */
+        TooManyRequests: {
+            headers: {
+                "Retry-After"?: number;
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+    };
     parameters: {
         /** @description The id returned by `POST /crawl`. */
         JobId: string;
@@ -301,6 +322,7 @@ export interface operations {
                     "application/json": components["schemas"]["Error"];
                 };
             };
+            401: components["responses"]["Unauthorized"];
             /** @description A URL that cannot name a site (a scheme other than http or https, or a host with no dot), a site on a private or local network, or a site that could not be read. The message is human-readable. */
             422: {
                 headers: {
@@ -310,6 +332,7 @@ export interface operations {
                     "application/json": components["schemas"]["Error"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
         };
     };
     enqueueCrawl: {
@@ -346,6 +369,7 @@ export interface operations {
                     "application/json": components["schemas"]["Error"];
                 };
             };
+            401: components["responses"]["Unauthorized"];
             /** @description Unusable URL, a site on a private or local network, or an invalid `callbackUrl` (validated at enqueue time). */
             422: {
                 headers: {
@@ -355,6 +379,7 @@ export interface operations {
                     "application/json": components["schemas"]["Error"];
                 };
             };
+            429: components["responses"]["TooManyRequests"];
         };
     };
     getCrawlResult: {
@@ -378,6 +403,7 @@ export interface operations {
                     "application/json": components["schemas"]["JobResult"];
                 };
             };
+            401: components["responses"]["Unauthorized"];
             /** @description No such job, or a job the queue no longer holds. */
             404: {
                 headers: {
@@ -410,6 +436,7 @@ export interface operations {
                     "application/json": components["schemas"]["SiteAudit"];
                 };
             };
+            401: components["responses"]["Unauthorized"];
             /** @description No such job, or a job the queue no longer holds. */
             404: {
                 headers: {
