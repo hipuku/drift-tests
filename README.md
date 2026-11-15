@@ -54,12 +54,13 @@ npm install
 ```
 
 ```bash
-DRIFT_WEBHOOK_ALLOWED_HOSTS=127.0.0.1 DRIFT_WEBHOOK_SECRET=drift-tests-secret npm run dev:server
+DRIFT_CRAWL_ALLOWED_HOSTS=127.0.0.1 DRIFT_WEBHOOK_ALLOWED_HOSTS=127.0.0.1 DRIFT_WEBHOOK_SECRET=drift-tests-secret npm run dev:server
 ```
 
-Both commands run in the Drift checkout. The two variables are needed by
-`webhook-delivery.feature`: the first lets the SSRF check accept the loopback receiver, and the
-second makes Drift sign the delivery with the secret the suite checks against.
+Both commands run in the Drift checkout. The first variable lets Drift crawl the fixture site,
+which listens on `127.0.0.1`. The other two are needed by `webhook-delivery.feature`: one lets the
+SSRF check accept the loopback receiver, and the other makes Drift sign the delivery with the
+secret the suite checks against.
 
 Then, in this repository:
 
