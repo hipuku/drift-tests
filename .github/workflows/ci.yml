@@ -83,6 +83,9 @@ jobs:
           # Permit and sign delivery to the loopback webhook receiver the suite
           # stands up (the SSRF guard refuses loopback by default).
           DRIFT_WEBHOOK_ALLOWED_HOSTS: "127.0.0.1"
+          # The fixture site listens on 127.0.0.1, which drift refuses to crawl
+          # unless the host is allowlisted, the same way callbacks are.
+          DRIFT_CRAWL_ALLOWED_HOSTS: "127.0.0.1"
           DRIFT_WEBHOOK_SECRET: "drift-tests-secret"
         run: |
           npm run dev:server > ../drift-server.log 2>&1 &
