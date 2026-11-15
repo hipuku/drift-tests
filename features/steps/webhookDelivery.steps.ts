@@ -37,7 +37,11 @@ Then("the webhook event is {string}", function (this: DriftWorld, event: string)
   const body = this.deliveredWebhook?.body;
   assert.equal(body?.event, event, `expected event ${event}, got ${JSON.stringify(body?.event)}`);
   // The header mirrors the body event.
-  assert.equal(this.deliveredWebhook?.headers["x-drift-event"], event, "x-drift-event header mismatch");
+  assert.equal(
+    this.deliveredWebhook?.headers["x-drift-event"],
+    event,
+    "x-drift-event header mismatch",
+  );
 });
 
 Then("the webhook carries the audit", function (this: DriftWorld) {
@@ -58,7 +62,11 @@ Then("the webhook is signed", function (this: DriftWorld) {
   const expected = `sha256=${createHmac("sha256", DRIFT_WEBHOOK_SECRET)
     .update(this.deliveredWebhook!.raw)
     .digest("hex")}`;
-  assert.equal(sig, expected, "x-drift-signature does not match the body under DRIFT_WEBHOOK_SECRET");
+  assert.equal(
+    sig,
+    expected,
+    "x-drift-signature does not match the body under DRIFT_WEBHOOK_SECRET",
+  );
 });
 
 After(async function (this: DriftWorld) {

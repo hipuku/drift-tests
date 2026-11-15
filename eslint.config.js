@@ -1,7 +1,7 @@
-import js from '@eslint/js'
-import globals from 'globals'
-import tseslint from 'typescript-eslint'
-import { defineConfig, globalIgnores } from 'eslint/config'
+import js from "@eslint/js";
+import globals from "globals";
+import tseslint from "typescript-eslint";
+import { defineConfig, globalIgnores } from "eslint/config";
 
 /**
  * Mirrors drift's root config, deliberately: two repos that lint differently
@@ -15,23 +15,23 @@ import { defineConfig, globalIgnores } from 'eslint/config'
  * it an error once the generated types land.
  */
 export default defineConfig([
-  globalIgnores(['node_modules', 'reports']),
+  globalIgnores(["node_modules", "reports"]),
 
   {
-    files: ['**/*.ts'],
+    files: ["**/*.ts"],
     extends: [js.configs.recommended, tseslint.configs.recommended],
     languageOptions: { globals: globals.node },
     rules: {
-      '@typescript-eslint/no-unused-vars': [
-        'error',
-        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
       ],
-      '@typescript-eslint/no-explicit-any': 'warn',
+      "@typescript-eslint/no-explicit-any": "warn",
     },
   },
 
   {
-    files: ['*.config.{js,mjs}', 'cucumber.mjs'],
+    files: ["*.config.{js,mjs}", "cucumber.mjs"],
     languageOptions: { globals: globals.node },
   },
-])
+]);

@@ -14,25 +14,25 @@ updates:
       # Cucumber and its loader are the runner. Grouped with the linters, one
       # runner major holds every lint patch behind it.
       runner:
-        patterns: ['@cucumber/*', 'tsx']
+        patterns: ["@cucumber/*", "tsx"]
       tooling:
-        patterns: ['*']
+        patterns: ["*"]
     commit-message:
-      prefix: 'deps'
+      prefix: "deps"
     # Without this Dependabot adds its own dependencies and javascript labels instead.
-    labels: ['deps']
+    labels: ["deps"]
     ignore:
-      - dependency-name: '@types/node'
-        update-types: ['version-update:semver-major']
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
       # TypeScript 7 is the native rewrite, deferred across every repo here so
       # they move together. Recorded rather than closed: a closed pull request
       # comes back on the next run and says nothing about why it was refused,
       # and while it kept coming back it held @cucumber/cucumber 13 behind it.
-      - dependency-name: 'typescript'
-        update-types: ['version-update:semver-major']
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: monthly
-    labels: ['deps']
+    labels: ["deps"]

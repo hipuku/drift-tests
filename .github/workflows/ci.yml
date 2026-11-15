@@ -1,8 +1,10 @@
-name: acceptance
+name: CI
 
 on:
   push:
+    branches: [main]
   pull_request:
+    branches: [main]
   workflow_dispatch:
     inputs:
       drift_ref:
@@ -10,8 +12,59 @@ on:
         required: false
         default: ""
 
+# Read-only: CI checks the suite, it never writes to the repo.
+permissions:
+  contents: read
+
+# One job per check, named exactly as the main ruleset requires them, so a
+# failure says which check broke. Lint, Format and Typecheck need only the
+# suite; Test stands up Drift.
 jobs:
-  bdd:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      # House style does not use an em dash. Ratcheted against a baseline rather
+      # than absolute: a rule that could only pass after a mechanical rewrite of
+      # every file would have been turned off instead of adopted.
+      - run: npm run lint:prose
+
+  format:
+    name: Format
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run format:check
+
+  typecheck:
+    name: Typecheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+
+  test:
+    name: Test
     runs-on: ubuntu-latest
 
     # Without this the job inherits the six-hour default, so a run that stalls
@@ -130,18 +183,6 @@ jobs:
           npm run generate
           git diff --exit-code -- features/support/contract.d.ts \
             || { echo "features/support/contract.d.ts is out of date; run npm run generate"; exit 1; }
-
-      - name: Lint the suite
-        run: npm run lint
-
-      # House style does not use an em dash. Ratcheted against a baseline rather
-      # than absolute: a rule that could only pass after a mechanical rewrite of
-      # every file would have been turned off instead of adopted.
-      - name: Lint prose
-        run: npm run lint:prose
-
-      - name: Typecheck the suite
-        run: npm run typecheck
 
       - name: Run the acceptance suite
         env:

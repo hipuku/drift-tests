@@ -16,14 +16,14 @@ project whose code is public.
 
 Six feature files, 18 scenarios.
 
-| Feature | Scenarios |
-|---|---|
-| `discover.feature` | A site with no sitemap is discovered through its homepage links. A missing URL is `400`. A non-HTTP scheme and an unresolvable host are `422` with a message. |
-| `crawl.feature` | A usable URL is `202 { jobId }`. A missing URL is `400`. A malformed URL is `422` with a message. |
-| `lifecycle.feature` | A reachable site ends `completed` and its audit is `200`. An unreachable target ends `failed` with a reason, and its audit is `409`. An unknown job id is `404`. |
-| `audit.feature` | The audit has a summary, colour families and contrast findings. It reports the fixture's near-duplicate colour, off-grid spacing, off-scale type size and failing contrast pair. `summary.pages` is the number of pages crawled, and every colour swatch and contrast pair cites only crawled pages. |
-| `webhooks.feature` | A `callbackUrl` that is loopback and not allowlisted (`localhost`), private (`10.0.0.1`), non-HTTP, or not a string is `422`. |
-| `webhook-delivery.feature` | A completed crawl is POSTed to a local receiver as `crawl.completed` with the audit, an `x-drift-event` header, and an `x-drift-signature` that matches the HMAC-SHA256 of the body. |
+| Feature                    | Scenarios                                                                                                                                                                                                                                                                                            |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `discover.feature`         | A site with no sitemap is discovered through its homepage links. A missing URL is `400`. A non-HTTP scheme and an unresolvable host are `422` with a message.                                                                                                                                        |
+| `crawl.feature`            | A usable URL is `202 { jobId }`. A missing URL is `400`. A malformed URL is `422` with a message.                                                                                                                                                                                                    |
+| `lifecycle.feature`        | A reachable site ends `completed` and its audit is `200`. An unreachable target ends `failed` with a reason, and its audit is `409`. An unknown job id is `404`.                                                                                                                                     |
+| `audit.feature`            | The audit has a summary, colour families and contrast findings. It reports the fixture's near-duplicate colour, off-grid spacing, off-scale type size and failing contrast pair. `summary.pages` is the number of pages crawled, and every colour swatch and contrast pair cites only crawled pages. |
+| `webhooks.feature`         | A `callbackUrl` that is loopback and not allowlisted (`localhost`), private (`10.0.0.1`), non-HTTP, or not a string is `422`.                                                                                                                                                                        |
+| `webhook-delivery.feature` | A completed crawl is POSTed to a local receiver as `crawl.completed` with the audit, an `x-drift-event` header, and an `x-drift-signature` that matches the HMAC-SHA256 of the body.                                                                                                                 |
 
 Not covered: the `queued` and `active` statuses (no scenario reads a job before it finishes),
 `crawl.failed` delivery, delivery retries, and WebSocket progress.
@@ -77,16 +77,20 @@ instance's secret. See [`.env.example`](.env.example). Node 22.12 or later.
 
 ## In CI
 
-[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on every push and pull request to this
-repository, and manually:
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on pull requests and pushes to `main`,
+and manually. It has four jobs, named as the `main` ruleset requires them:
 
-1. A Redis service container.
-2. A checkout of Drift with its tags. Node comes from Drift's `.nvmrc`.
-3. `npm ci` and Chromium in the Drift checkout, then the backend in the background with the two
-   `DRIFT_WEBHOOK_*` variables. The job waits for `POST /discover` to return `400`.
-4. `npm run generate` against the cloned `openapi.yaml`. The job fails if
-   `features/support/contract.d.ts` changed.
-5. `lint`, `lint:prose`, `typecheck`, then the suite with an HTML report.
+- **Lint:** `lint` and `lint:prose`.
+- **Format:** `format:check`, Prettier with Drift's settings.
+- **Typecheck:** `typecheck`.
+- **Test:** the suite against a running Drift:
+  1. A Redis service container.
+  2. A checkout of Drift with its tags. Node comes from Drift's `.nvmrc`.
+  3. `npm ci` and Chromium in the Drift checkout, then the backend in the background with the two
+     `DRIFT_WEBHOOK_*` variables. The job waits for `POST /discover` to return `400`.
+  4. `npm run generate` against the cloned `openapi.yaml`. The job fails if
+     `features/support/contract.d.ts` changed.
+  5. The suite, with an HTML report.
 
 A push to Drift does not trigger this workflow. It tests Drift's `main` as of the run, or the tag,
 branch or SHA given as `drift_ref` in a manual run.
@@ -97,16 +101,18 @@ it; a `GH_PAT` secret is used instead if set.
 
 ## Scripts
 
-| Command | Does |
-| --- | --- |
-| `npm test` | Every feature against `DRIFT_URL` (default `http://127.0.0.1:3001`) |
-| `npm run test:ci` | The same, with progress output and an HTML report in `reports/` |
-| `npm run mutation` | The broken-build run described above. Needs a Drift checkout at `../drift` (or `DRIFT`), Redis, and a free port |
-| `npm run generate` | Regenerate `features/support/contract.d.ts` from Drift's `openapi.yaml`, read from `DRIFT_SPEC` or `../drift` |
-| `npm run lint` | ESLint, with the same rules as Drift |
-| `npm run lint:fix` | ESLint with `--fix` |
-| `npm run lint:prose` | Fails on a new em dash in any tracked file |
-| `npm run typecheck` | `tsc --noEmit` |
+| Command                | Does                                                                                                            |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `npm test`             | Every feature against `DRIFT_URL` (default `http://127.0.0.1:3001`)                                             |
+| `npm run test:ci`      | The same, with progress output and an HTML report in `reports/`                                                 |
+| `npm run mutation`     | The broken-build run described above. Needs a Drift checkout at `../drift` (or `DRIFT`), Redis, and a free port |
+| `npm run generate`     | Regenerate `features/support/contract.d.ts` from Drift's `openapi.yaml`, read from `DRIFT_SPEC` or `../drift`   |
+| `npm run lint`         | ESLint, with the same rules as Drift                                                                            |
+| `npm run lint:fix`     | ESLint with `--fix`                                                                                             |
+| `npm run lint:prose`   | Fails on a new em dash in any tracked file                                                                      |
+| `npm run format`       | Prettier, writing                                                                                               |
+| `npm run format:check` | Prettier, checking only                                                                                         |
+| `npm run typecheck`    | `tsc --noEmit`                                                                                                  |
 
 ## The export
 
