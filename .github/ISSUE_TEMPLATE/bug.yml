@@ -18,7 +18,7 @@ body:
     id: drift
     attributes:
       label: Drift version under test
-      description: The DRIFT_VERSION the run printed, or the Drift tag or commit.
+      description: The DRIFT_VERSION the run printed. If it printed unrecorded, the Drift tag or commit the suite ran against.
       placeholder: v0.2.0
     validations: { required: true }
   - type: input
