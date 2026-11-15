@@ -26,7 +26,7 @@ It is the change someone would make after deciding the endpoint should always re
 
 ## The run
 
-```
+```text
 > drift-tests@0.1.0 test
 > NODE_OPTIONS="--import tsx" cucumber-js
 

@@ -78,9 +78,11 @@ instance's secret. See [`.env.example`](.env.example). Node 22.12 or later.
 ## In CI
 
 [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on pull requests and pushes to `main`,
-and manually. It has four jobs, named as the `main` ruleset requires them:
+and manually. It has five jobs, named as the `main` ruleset requires them:
 
-- **Lint:** `lint` and `lint:prose`.
+- **Lint:** `lint`, `lint:prose` and `lint:md` (markdown structure).
+- **Links:** every relative link and heading anchor in the markdown resolves, checked offline with
+  lychee.
 - **Format:** `format:check`, Prettier with Drift's settings.
 - **Typecheck:** `typecheck`.
 - **Test:** the suite against a running Drift:
@@ -110,6 +112,7 @@ it; a `GH_PAT` secret is used instead if set.
 | `npm run lint`         | ESLint, with the same rules as Drift                                                                            |
 | `npm run lint:fix`     | ESLint with `--fix`                                                                                             |
 | `npm run lint:prose`   | Fails on a new em dash in any tracked file                                                                      |
+| `npm run lint:md`      | markdownlint on every markdown file                                                                             |
 | `npm run format`       | Prettier, writing                                                                                               |
 | `npm run format:check` | Prettier, checking only                                                                                         |
 | `npm run typecheck`    | `tsc --noEmit`                                                                                                  |
