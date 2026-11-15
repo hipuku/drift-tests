@@ -35,7 +35,7 @@ export interface paths {
         put?: never;
         /**
          * Enqueue a crawl
-         * @description Checks the URL before queueing: a URL that cannot name a site is a 422 and no job is created. Poll `/crawl/{jobId}/result`, or pass a `callbackUrl`. Page URLs that are not absolute or not on the root's origin are dropped. With no page left, or no `pages`, the crawler walks same-origin links from the root. At most 10 pages (`MAX_CRAWL_PAGES`).
+         * @description Checks the URL before queueing: a URL that cannot name a site, or one that resolves to a private or local address, is a 422 and no job is created. While crawling, any request a page makes to such an address, a redirect included, is aborted. Poll `/crawl/{jobId}/result`, or pass a `callbackUrl`. Page URLs that are not absolute or not on the root's origin are dropped. With no page left, or no `pages`, the crawler walks same-origin links from the root. At most 10 pages (`MAX_CRAWL_PAGES`).
          */
         post: operations["enqueueCrawl"];
         delete?: never;
@@ -199,6 +199,10 @@ export interface components {
         ContrastFinding: {
             foreground?: string;
             background?: string;
+            /** @description The opaque foreground the ratio was measured with. Present only when compositing changed a colour. */
+            resolvedForeground?: string;
+            /** @description The opaque background the ratio was measured against. Present only when compositing changed a colour. */
+            resolvedBackground?: string;
             ratio?: number;
             passAA?: boolean;
             passAAA?: boolean;
@@ -297,7 +301,7 @@ export interface operations {
                     "application/json": components["schemas"]["Error"];
                 };
             };
-            /** @description A URL that cannot name a site (a scheme other than http or https, or a host with no dot), or a site that could not be read. The message is human-readable. */
+            /** @description A URL that cannot name a site (a scheme other than http or https, or a host with no dot), a site on a private or local network, or a site that could not be read. The message is human-readable. */
             422: {
                 headers: {
                     [name: string]: unknown;
@@ -342,7 +346,7 @@ export interface operations {
                     "application/json": components["schemas"]["Error"];
                 };
             };
-            /** @description Unusable URL or invalid `callbackUrl` (validated at enqueue time). */
+            /** @description Unusable URL, a site on a private or local network, or an invalid `callbackUrl` (validated at enqueue time). */
             422: {
                 headers: {
                     [name: string]: unknown;
