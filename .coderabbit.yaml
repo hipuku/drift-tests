@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
 # CodeRabbit reviews every pull request. It is not a required check: each comment is
 # applied as a normal commit or answered and resolved. The path instructions below are
-# the rules from DESIGN.md that a reviewer should hold this suite to.
+# the rules from ARCHITECTURE.md that a reviewer should hold this suite to.
 language: en-AU
 reviews:
   profile: chill

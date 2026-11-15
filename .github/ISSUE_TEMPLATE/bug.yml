@@ -6,7 +6,7 @@ body:
     id: expected
     attributes:
       label: What it should do, and what it does
-      description: The scenario or step, and the line in README or DESIGN it contradicts, if there is one.
+      description: The scenario or step, and the line in README or ARCHITECTURE it contradicts, if there is one.
     validations: { required: true }
   - type: textarea
     id: repro

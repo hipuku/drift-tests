@@ -15,4 +15,4 @@
 - [ ] `npm run lint && npm run lint:prose && npm run typecheck && npm test` passes against a running Drift
 - [ ] A scenario that fails without this change, for a new check
 - [ ] `npm run generate` rerun, if Drift's `openapi.yaml` changed
-- [ ] README or DESIGN updated, if what the suite covers changed
+- [ ] README or ARCHITECTURE updated, if what the suite covers changed
